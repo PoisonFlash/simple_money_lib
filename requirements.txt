@@ -1,0 +1,3 @@
+babel==2.16.0
+py-moneyed
+typing_extensions==4.12.2
