@@ -1,5 +1,5 @@
-from moneyed import *
-
+from simple_money_lib.currency import Currency
+from simple_money_lib.currencies.all import *
 
 class CurrencyContext:
     _predefined_substitutions: dict = {
@@ -11,12 +11,12 @@ class CurrencyContext:
         "₽": RUB  # Russian Ruble
     }
     _substitutions = _predefined_substitutions.copy()
-    _default_currency: Currency = None
+    _default_currency: Currency | None = None
 
     @classmethod
-    def set_default_currency(cls, currency: str) -> None:
+    def set_default_currency(cls, currency_code: str) -> None:
         """Set the default currency for the current session."""
-        cls._default_currency = Currency(currency)
+        cls._default_currency = Currency.get(currency_code)
 
     @classmethod
     def get_default_currency(cls) -> Currency:
@@ -26,13 +26,13 @@ class CurrencyContext:
         return cls._default_currency
 
     @classmethod
-    def set_currency_symbol(cls, symbol: str, currency: str) -> None:
-        """Set or override symbol / shortcut for a currency."""
-        currency_str = str(currency).upper()
+    def set_currency_symbol(cls, symbol: str, currency_code: str) -> None:
+        """Set or override symbol / shortcut for the given currency."""
+        currency_code_upper = str(currency_code).upper()
         symbol = symbol.upper()
-        if currency_str not in CURRENCIES.keys():
-            raise ValueError(f"Unknown currency: '{currency}'")
-        cls._substitutions[symbol] = Currency(currency_str)
+        if not Currency.get(currency_code_upper):
+            raise ValueError(f"Unknown currency: '{currency_code}'")
+        cls._substitutions[symbol] = Currency.get(currency_code_upper)
 
     @classmethod
     def get_currency(cls, currency_symbol: str) -> Currency:
@@ -40,8 +40,8 @@ class CurrencyContext:
         symbol = currency_symbol.upper()
         if symbol in cls._substitutions.keys():
             return cls._substitutions[symbol]
-        elif symbol in CURRENCIES.keys():
-            return CURRENCIES[symbol]
+        elif c := Currency.get(symbol):
+            return c
         else:
             raise ValueError(f"Unknown currency: '{currency_symbol}'")
 

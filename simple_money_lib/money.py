@@ -1,4 +1,3 @@
-from moneyed import *
 from moneyed import Money as _BaseMoney
 
 import simple_money_lib.money_parser as _mp

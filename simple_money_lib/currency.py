@@ -3,14 +3,14 @@ from dataclasses import dataclass
 from typing import ClassVar, Dict
 import threading
 
-from simple_money_lib.errors import CurrencyExistsError, CurrencyNotRegisteredError
+from simple_money_lib.errors import CurrencyExistsError
 
 @dataclass(frozen=True, slots=True)
 class Currency:
     # ISO-based
     code: str
-    numeric: str | None = None
-    sub_unit: int = 2
+    numeric: int | None = None
+    sub_unit: int | None = 2
     name: str | None = None
 
     # Class-level registry for unique instances
@@ -32,10 +32,11 @@ class Currency:
             return instance
 
     @classmethod
-    def get(cls, code: str) -> Currency:
+    def get(cls, code: str) -> Currency | None:
+        """Get currency instance or None if not registered"""
         with cls._lock:
             if code not in cls._registry:
-                raise CurrencyNotRegisteredError(code)
+                return None
             return cls._registry[code]
 
     @classmethod
@@ -49,4 +50,3 @@ class Currency:
 
     def __repr__(self):
         return f"Currency(code='{self.code}', name='{self.name}', numeric='{self.numeric}')"
-

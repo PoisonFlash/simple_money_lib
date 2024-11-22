@@ -19,11 +19,8 @@ def test_get_currency():
     USD = Currency("USD", numeric="840", sub_unit=2, name="US Dollar")
     assert Currency.get('USD') is USD
 
-def test_currency_not_registered_error():
-    with pytest.raises(CurrencyNotRegisteredError) as exc_info:
-        Currency.get("XYZ")
-    assert exc_info.value.code == "XYZ"
-    assert str(exc_info.value) == "Currency with code 'XYZ' is not registered."
+def test_currency_not_registered_is_none():
+    assert Currency.get("XYZ") is None
 
 def test_currency_exists_error():
     Currency("USD", numeric="840", sub_unit=2, name="US Dollar")
