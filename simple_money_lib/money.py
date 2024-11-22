@@ -18,3 +18,4 @@ class Money(_BaseMoney):
     def __str__(self) -> str:
         # Simplified overwriting
         return f"{self.amount:.2f} {self.currency}"
+
