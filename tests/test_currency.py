@@ -1,112 +1,115 @@
 import pytest
+from unittest.mock import patch
 
 import threading
 
 from simple_money_lib.currency import Currency
-from simple_money_lib.errors import *
+from simple_money_lib.errors import CurrencyExistsError, CurrencyCodeInvalid
 
 # Reset the class for each test to clean state
 @pytest.fixture(autouse=True)
 def reset_currency_registry():
     Currency._registry.clear()
-    Currency.strict_mode = True
-
-def test_missing_code():
-    with pytest.raises(TypeError):
-        Currency(numeric="840", sub_unit=2, name="Missing Code")
-
-def test_get_currency():
-    USD = Currency("USD", numeric="840", sub_unit=2, name="US Dollar")
-    assert Currency.get('USD') is USD
-
-def test_currency_not_registered_is_none():
-    assert Currency.get("XYZ") is None
-
-def test_currency_exists_error():
-    Currency("USD", numeric="840", sub_unit=2, name="US Dollar")
-    with pytest.raises(CurrencyExistsError) as exc_info:
-        Currency("USD", numeric="840", sub_unit=2, name="Duplicate US Dollar")
-    assert exc_info.value.code == "USD"
-    assert str(exc_info.value) == "Currency with code 'USD' is already registered."
-
-def test_singleton_behavior_default():
-    _USD = Currency("USD", numeric="840", sub_unit=2, name="US Dollar")
-
-    # Attempt to register the same currency should raise CurrencyExistsError
-    with pytest.raises(CurrencyExistsError) as exc_info:
-        Currency("USD", numeric="840", sub_unit=2, name="Duplicate US Dollar")
-
-    # Verify exception details
-    assert exc_info.value.code == "USD"
-    assert str(exc_info.value) == "Currency with code 'USD' is already registered."
-
-def test_singleton_behavior_strict():
-    Currency.strict_mode = True
-    _USD = Currency("USD", numeric="840", sub_unit=2, name="US Dollar")
-
-    # Attempt to register the same currency should raise CurrencyExistsError
-    with pytest.raises(CurrencyExistsError) as exc_info:
-        Currency("USD", numeric="840", sub_unit=2, name="Duplicate US Dollar")
-
-    # Verify exception details
-    assert exc_info.value.code == "USD"
-    assert str(exc_info.value) == "Currency with code 'USD' is already registered."
-
-def test_singleton_behavior_relaxed():
     Currency.strict_mode = False
-    USD1 = Currency("USD", numeric="840", sub_unit=2, name="US Dollar")
-    USD2 = Currency("USD", numeric="840", sub_unit=2, name="US Dollar")
-    assert USD1 is USD2
 
-def test_all_currencies():
-    USD = Currency("USD", numeric="840", sub_unit=2, name="US Dollar")
-    EUR = Currency("EUR", numeric="978", sub_unit=2, name="Euro")
-    all_currencies = Currency.all_currencies()
+@pytest.fixture(autouse=True)
+def mock_user_defined_currencies():
+    """Mock _user_defined_currencies with a temporary dictionary."""
+    with patch("simple_money_lib.currency._user_defined_currencies", {}):
+        yield
 
-    assert "USD" in all_currencies
-    assert "EUR" in all_currencies
-    assert all_currencies["USD"] is USD
-    assert all_currencies["EUR"] is EUR
-    assert len(all_currencies) == 2
+@pytest.fixture(autouse=True)
+def mock_save_user_currencies():
+    """Mock save_user_currencies to prevent actual writes to disk."""
+    with patch("simple_money_lib.currency.save_user_currencies") as mock_save:
+        yield mock_save
 
-def test_string_representation():
-    USD = Currency("USD", numeric="840", sub_unit=2, name="US Dollar")
-    USD = Currency.get('USD')
-    assert str(USD) == "USD"
-    assert repr(USD) == "Currency(code='USD', name='US Dollar', numeric='840')"
+def test_is_valid_code():
+    """Test the _is_valid_code static method."""
+    valid_codes = ["USD", "btc", "CRYPTO_1", "abc123", "A123456"]
+    invalid_codes = ["", "AB", "ABCDEFGHI", "1USD", "U@SD", None, 12345]
+
+    for code in valid_codes:
+        assert Currency._is_valid_code(code) is True
+
+    for code in invalid_codes:
+        assert Currency._is_valid_code(code) is False
+
+def test_currency_code_validation():
+    """Test that valid and invalid codes are handled correctly in __new__ and register."""
+    # Valid codes that need to be registered first
+    valid_codes = ["USD", " btc ", "CRYPTO_1", "abc123"]
+    for code in valid_codes:
+        # Dynamically register valid codes to avoid reliance on predefined metadata
+        Currency.register(code.strip().upper(), numeric=999, sub_unit=2, name=f"Test Currency {code.strip().upper()}")
+        currency = Currency(code)
+        assert currency.code == code.strip().upper()
+
+    # Invalid codes
+    invalid_codes = ["", "AB", "ABCDEFGHI", "1USD", "U@SD", None, 12345]
+    for code in invalid_codes:
+        with pytest.raises(CurrencyCodeInvalid, match=f"Invalid currency code: '{code}'"):
+            Currency(code)
+
+def test_predefined_currency():
+    """Test creation of predefined currency."""
+    usd = Currency("USD")
+    assert usd.code == "USD"
+    assert usd.name == "United States dollar"
+    assert usd.sub_unit == 2
+    assert usd.numeric == 840
+
+def test_register_new_currency():
+    """Test registering a new currency."""
+    btc = Currency.register("BTC", numeric=1000, sub_unit=8, name="Bitcoin")
+    assert btc.code == "BTC"
+    assert btc.name == "Bitcoin"
+    assert btc.sub_unit == 8
+    assert btc.numeric == 1000
+
+def test_register_default_mode_is_non_strict():
+    """Test non-strict mode returns existing instance."""
+    btc1 = Currency.register("BTC", numeric=1000, sub_unit=8, name="Bitcoin")
+    btc2 = Currency.register("BTC", numeric=1000, sub_unit=8, name="Bitcoin")
+    assert btc1 is btc2
+
+def test_register_strict_mode():
+    """Test strict mode prevents duplicates."""
+    Currency.strict_mode = True
+    Currency.register("BTC", numeric=1000, sub_unit=8, name="Bitcoin")
+    with pytest.raises(CurrencyExistsError):
+        Currency.register("BTC", numeric=1000, sub_unit=8, name="Bitcoin")
+
+def test_register_non_strict_mode():
+    Currency.strict_mode = False
+    """Test non-strict mode returns existing instance."""
+    btc1 = Currency.register("BTC", numeric=1000, sub_unit=8, name="Bitcoin")
+    btc2 = Currency.register("BTC", numeric=1000, sub_unit=8, name="Bitcoin")
+    assert btc1 is btc2
 
 def test_thread_safety():
+    """Test thread safety of register."""
+    results = []
     Currency.strict_mode = False
-    def register_jpy():
-        Currency("JPY", numeric="392", sub_unit=0, name="Japanese yen")
+    def register_btc():
+        try:
+            btc = Currency.register("BTC", numeric=1000, sub_unit=8, name="Bitcoin")
+            results.append(btc)
+        except Exception as e:
+            results.append(e)
 
-    threads = [threading.Thread(target=register_jpy) for _ in range(10)]
+    threads = [threading.Thread(target=register_btc) for _ in range(50)]
     for thread in threads:
         thread.start()
     for thread in threads:
         thread.join()
 
-    # Ensure only one instance of USD exists
-    assert len(Currency.all_currencies()) == 1
-    assert "JPY" in Currency._registry
+    # All threads should return the same instance
+    assert len(results) == 50
+    assert all(r is results[0] for r in results)
 
-def test_numeric_code_stored_correctly():
-    # Register two currencies with different numeric codes
-    Currency("USD", numeric="840", sub_unit=2, name="US Dollar")
-    Currency("XCD", numeric="951", sub_unit=2, name="East Caribbean Dollar")
-
-    # Retrieve all registered currencies
-    all_currencies = Currency.all_currencies()
-
-    # Ensure both currencies are registered and their numeric codes are correct
-    assert len(all_currencies) == 2
-    assert all_currencies["USD"].numeric == "840"
-    assert all_currencies["XCD"].numeric == "951"
-
-def test_currency_extension():
-    class CryptoCurrency(Currency):
-        pass
-
-    BTC = CryptoCurrency("BTC", numeric=None, sub_unit=8, name="Bitcoin")
-    assert str(BTC) == "BTC"
-    assert isinstance(BTC, CryptoCurrency)
+@patch("simple_money_lib.currency.save_user_currencies")
+def test_register_saves_user_currencies(mock_save):
+    """Test that user-defined currencies are saved after registration."""
+    Currency.register("BTC", numeric=1000, sub_unit=8, name="Bitcoin")
+    mock_save.assert_called_once()
