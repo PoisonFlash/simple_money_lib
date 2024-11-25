@@ -57,7 +57,7 @@ def generate_currency_all() -> None:
         numeric = row['Num'] if row['Num'] is not pd.NA else None  # Replace <NA> with None
         sub_unit = row['D'] if row['D'] is not pd.NA else None  # Replace <NA> with None
         name = row['Currency']
-        currency_str = f"{code} = Currency('{code}', {numeric}, {sub_unit}, '{name}')"
+        currency_str = f"{code} = Currency('{code}')"
         currency_strings.append(currency_str)
         alls.append(' '*10 + '"' + code + '"')
 
@@ -101,4 +101,5 @@ def generate_predefined_currencies_json() -> None:
     print(f"Predefined currencies JSON saved to '{json_file}'")
 
 # Call the function
+generate_currency_all()
 generate_predefined_currencies_json()
