@@ -2,7 +2,7 @@
 
 #### **Plain Language (For README or Requirements Discussion)**
 
-1. **Predefined Currencies for Simplicity**:
+1. **TODO: Predefined Currencies for Simplicity**:
    - The library provides predefined currency objects (e.g., `SEK` for Swedish Krona) that can be directly imported. This is especially useful for users transitioning from `moneyed` or older scripts.
 
 2. **Dynamic Currency Creation**:
