@@ -18,3 +18,4 @@ class Money(_BaseMoney):
         # Simplified overwriting
         return f"{self.amount:.2f} {self.currency}"
 
+
