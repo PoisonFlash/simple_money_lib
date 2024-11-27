@@ -146,9 +146,10 @@ class Currency:
     def __repr__(self):
         return f"Currency(code='{self.code}', name='{self.name}', numeric='{self.numeric}, sub_unit={self.sub_unit}')"
 
-# Currency.strict_mode = True
-# a = Currency.register("", numeric=1000, sub_unit=8, name="Bitcoin")
+# Currency.strict_mode = False
+# a = Currency.register("USD", numeric=1000, sub_unit=8, name="Bitcoin")
 # print('A', repr(a))
 # b = Currency.register("BTC", numeric=1000, sub_unit=8, name="Bitcoin")
 # print('B', repr(b))
 # print(a is b)
+# print(a is Currency('USD'))
