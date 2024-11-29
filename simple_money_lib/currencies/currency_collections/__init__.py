@@ -1,0 +1,1 @@
+from simple_money_lib.currencies.currency_collections.currency_collections import CurrencyCollection

@@ -1,0 +1,12 @@
+{
+    "major": {
+        "currencies": ["USD", "EUR", "JPY", "GBP", "AUD", "CAD", "CHF", "CNY", "HKD", "NZD"],
+        "name": "Major Currencies",
+        "description": "10 most used currencies globally"
+    },
+    "brics": {
+        "currencies": ["BRL", "RUB", "INR", "CNY", "ZAR", "IRR", "EGP", "ETB", "AED"],
+        "name": "BRICS Currencies",
+        "description": "Currencies of 9 nine BRICS member states"
+    }
+}

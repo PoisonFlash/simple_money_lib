@@ -58,12 +58,4 @@ class CurrencyCollection:
         """
         return f"CurrencyCollection({', '.join(self._currencies.keys())})"
 
-# # Usage:
-# a = CurrencyCollection("USD", "EUR", "RUB", name="Collection name here", description="Description comes")
-# print(a)
-# print(a.name, a.description)
-# print("RUB" in a)
-# print("AED" not in a)
-# from simple_money_lib.currencies.major import USD, JPY
-# print(USD in a)
-# print(JPY not in a)
+

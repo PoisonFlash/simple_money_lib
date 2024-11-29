@@ -1,5 +1,6 @@
 import pandas as pd
 import json
+from pathlib import Path
 
 def read_wiki_table(url: str, table_index: int) -> pd.DataFrame:
     df = pd.read_html(url)
@@ -31,17 +32,16 @@ def download_countries() -> None:
         .to_csv(csv_file, index=False)
     print(f"ISO countries codes table saved to '{csv_file}'")
 
-
 def generate_currency_all() -> None:
     """Generate file with all currencies based on pre-created CSV"""
     filename = "gen_all.py"
 
     imports = [
-        "from simple_money_lib.currency import Currency",
+        "from simple_money_lib.currency import Currency as _Currency",
         ""
     ]
 
-    csv_file = 'iso_currency_codes.csv'
+    csv_file = Path('iso_currency_codes.csv')
     df = pd.read_csv(csv_file, usecols=[0, 1, 2, 3])
     # Replace "." in 'D' with None and ensure it stays as int | None
     df['D'] = df['D'].replace('.', None).astype('Int64')  # Keeps as integer nullable (Int64 supports None)

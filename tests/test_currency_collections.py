@@ -4,7 +4,7 @@ import re
 
 from simple_money_lib.currency import Currency
 from simple_money_lib.errors import CurrencyNotFoundError, CurrencyCodeInvalid
-from simple_money_lib.collections.currency_collections import CurrencyCollection
+from simple_money_lib.currencies.currency_collections.currency_collections import CurrencyCollection
 from simple_money_lib.currencies.all import EUR, RUB
 
 @pytest.fixture
