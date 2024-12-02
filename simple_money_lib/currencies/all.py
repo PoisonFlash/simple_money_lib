@@ -1,361 +1,201 @@
-from simple_money_lib.currency import Currency
+# Auto-generated module
+# CHECKLINE 2024-12-02 17:51:40
 
-AED = Currency('AED')
-AFN = Currency('AFN')
-ALL = Currency('ALL')
-AMD = Currency('AMD')
-ANG = Currency('ANG')
-AOA = Currency('AOA')
-ARS = Currency('ARS')
-AUD = Currency('AUD')
-AWG = Currency('AWG')
-AZN = Currency('AZN')
-BAM = Currency('BAM')
-BBD = Currency('BBD')
-BDT = Currency('BDT')
-BGN = Currency('BGN')
-BHD = Currency('BHD')
-BIF = Currency('BIF')
-BMD = Currency('BMD')
-BND = Currency('BND')
-BOB = Currency('BOB')
-BOV = Currency('BOV')
-BRL = Currency('BRL')
-BSD = Currency('BSD')
-BTN = Currency('BTN')
-BWP = Currency('BWP')
-BYN = Currency('BYN')
-BZD = Currency('BZD')
-CAD = Currency('CAD')
-CDF = Currency('CDF')
-CHE = Currency('CHE')
-CHF = Currency('CHF')
-CHW = Currency('CHW')
-CLF = Currency('CLF')
-CLP = Currency('CLP')
-CNY = Currency('CNY')
-COP = Currency('COP')
-COU = Currency('COU')
-CRC = Currency('CRC')
-CUP = Currency('CUP')
-CVE = Currency('CVE')
-CZK = Currency('CZK')
-DJF = Currency('DJF')
-DKK = Currency('DKK')
-DOP = Currency('DOP')
-DZD = Currency('DZD')
-EGP = Currency('EGP')
-ERN = Currency('ERN')
-ETB = Currency('ETB')
-EUR = Currency('EUR')
-FJD = Currency('FJD')
-FKP = Currency('FKP')
-GBP = Currency('GBP')
-GEL = Currency('GEL')
-GHS = Currency('GHS')
-GIP = Currency('GIP')
-GMD = Currency('GMD')
-GNF = Currency('GNF')
-GTQ = Currency('GTQ')
-GYD = Currency('GYD')
-HKD = Currency('HKD')
-HNL = Currency('HNL')
-HTG = Currency('HTG')
-HUF = Currency('HUF')
-IDR = Currency('IDR')
-ILS = Currency('ILS')
-INR = Currency('INR')
-IQD = Currency('IQD')
-IRR = Currency('IRR')
-ISK = Currency('ISK')
-JMD = Currency('JMD')
-JOD = Currency('JOD')
-JPY = Currency('JPY')
-KES = Currency('KES')
-KGS = Currency('KGS')
-KHR = Currency('KHR')
-KMF = Currency('KMF')
-KPW = Currency('KPW')
-KRW = Currency('KRW')
-KWD = Currency('KWD')
-KYD = Currency('KYD')
-KZT = Currency('KZT')
-LAK = Currency('LAK')
-LBP = Currency('LBP')
-LKR = Currency('LKR')
-LRD = Currency('LRD')
-LSL = Currency('LSL')
-LYD = Currency('LYD')
-MAD = Currency('MAD')
-MDL = Currency('MDL')
-MGA = Currency('MGA')
-MKD = Currency('MKD')
-MMK = Currency('MMK')
-MNT = Currency('MNT')
-MOP = Currency('MOP')
-MRU = Currency('MRU')
-MUR = Currency('MUR')
-MVR = Currency('MVR')
-MWK = Currency('MWK')
-MXN = Currency('MXN')
-MXV = Currency('MXV')
-MYR = Currency('MYR')
-MZN = Currency('MZN')
-NAD = Currency('NAD')
-NGN = Currency('NGN')
-NIO = Currency('NIO')
-NOK = Currency('NOK')
-NPR = Currency('NPR')
-NZD = Currency('NZD')
-OMR = Currency('OMR')
-PAB = Currency('PAB')
-PEN = Currency('PEN')
-PGK = Currency('PGK')
-PHP = Currency('PHP')
-PKR = Currency('PKR')
-PLN = Currency('PLN')
-PYG = Currency('PYG')
-QAR = Currency('QAR')
-RON = Currency('RON')
-RSD = Currency('RSD')
-RUB = Currency('RUB')
-RWF = Currency('RWF')
-SAR = Currency('SAR')
-SBD = Currency('SBD')
-SCR = Currency('SCR')
-SDG = Currency('SDG')
-SEK = Currency('SEK')
-SGD = Currency('SGD')
-SHP = Currency('SHP')
-SLE = Currency('SLE')
-SOS = Currency('SOS')
-SRD = Currency('SRD')
-SSP = Currency('SSP')
-STN = Currency('STN')
-SVC = Currency('SVC')
-SYP = Currency('SYP')
-SZL = Currency('SZL')
-THB = Currency('THB')
-TJS = Currency('TJS')
-TMT = Currency('TMT')
-TND = Currency('TND')
-TOP = Currency('TOP')
-TRY = Currency('TRY')
-TTD = Currency('TTD')
-TWD = Currency('TWD')
-TZS = Currency('TZS')
-UAH = Currency('UAH')
-UGX = Currency('UGX')
-USD = Currency('USD')
-USN = Currency('USN')
-UYI = Currency('UYI')
-UYU = Currency('UYU')
-UYW = Currency('UYW')
-UZS = Currency('UZS')
-VED = Currency('VED')
-VES = Currency('VES')
-VND = Currency('VND')
-VUV = Currency('VUV')
-WST = Currency('WST')
-XAF = Currency('XAF')
-XAG = Currency('XAG')
-XAU = Currency('XAU')
-XBA = Currency('XBA')
-XBB = Currency('XBB')
-XBC = Currency('XBC')
-XBD = Currency('XBD')
-XCD = Currency('XCD')
-XDR = Currency('XDR')
-XOF = Currency('XOF')
-XPD = Currency('XPD')
-XPF = Currency('XPF')
-XPT = Currency('XPT')
-XSU = Currency('XSU')
-XTS = Currency('XTS')
-XUA = Currency('XUA')
-XXX = Currency('XXX')
-YER = Currency('YER')
-ZAR = Currency('ZAR')
-ZMW = Currency('ZMW')
-ZWG = Currency('ZWG')
+# Includes all ISO currencies, source: https://en.wikipedia.org/wiki/ISO_4217
+
+from simple_money_lib.currency import Currency as _Currency
+
+# Export individual currencies
+AED = _Currency("AED")
+AFN = _Currency("AFN")
+ALL = _Currency("ALL")
+AMD = _Currency("AMD")
+ANG = _Currency("ANG")
+AOA = _Currency("AOA")
+ARS = _Currency("ARS")
+AUD = _Currency("AUD")
+AWG = _Currency("AWG")
+AZN = _Currency("AZN")
+BAM = _Currency("BAM")
+BBD = _Currency("BBD")
+BDT = _Currency("BDT")
+BGN = _Currency("BGN")
+BHD = _Currency("BHD")
+BIF = _Currency("BIF")
+BMD = _Currency("BMD")
+BND = _Currency("BND")
+BOB = _Currency("BOB")
+BOV = _Currency("BOV")
+BRL = _Currency("BRL")
+BSD = _Currency("BSD")
+BTN = _Currency("BTN")
+BWP = _Currency("BWP")
+BYN = _Currency("BYN")
+BZD = _Currency("BZD")
+CAD = _Currency("CAD")
+CDF = _Currency("CDF")
+CHE = _Currency("CHE")
+CHF = _Currency("CHF")
+CHW = _Currency("CHW")
+CLF = _Currency("CLF")
+CLP = _Currency("CLP")
+CNY = _Currency("CNY")
+COP = _Currency("COP")
+COU = _Currency("COU")
+CRC = _Currency("CRC")
+CUP = _Currency("CUP")
+CVE = _Currency("CVE")
+CZK = _Currency("CZK")
+DJF = _Currency("DJF")
+DKK = _Currency("DKK")
+DOP = _Currency("DOP")
+DZD = _Currency("DZD")
+EGP = _Currency("EGP")
+ERN = _Currency("ERN")
+ETB = _Currency("ETB")
+EUR = _Currency("EUR")
+FJD = _Currency("FJD")
+FKP = _Currency("FKP")
+GBP = _Currency("GBP")
+GEL = _Currency("GEL")
+GHS = _Currency("GHS")
+GIP = _Currency("GIP")
+GMD = _Currency("GMD")
+GNF = _Currency("GNF")
+GTQ = _Currency("GTQ")
+GYD = _Currency("GYD")
+HKD = _Currency("HKD")
+HNL = _Currency("HNL")
+HTG = _Currency("HTG")
+HUF = _Currency("HUF")
+IDR = _Currency("IDR")
+ILS = _Currency("ILS")
+INR = _Currency("INR")
+IQD = _Currency("IQD")
+IRR = _Currency("IRR")
+ISK = _Currency("ISK")
+JMD = _Currency("JMD")
+JOD = _Currency("JOD")
+JPY = _Currency("JPY")
+KES = _Currency("KES")
+KGS = _Currency("KGS")
+KHR = _Currency("KHR")
+KMF = _Currency("KMF")
+KPW = _Currency("KPW")
+KRW = _Currency("KRW")
+KWD = _Currency("KWD")
+KYD = _Currency("KYD")
+KZT = _Currency("KZT")
+LAK = _Currency("LAK")
+LBP = _Currency("LBP")
+LKR = _Currency("LKR")
+LRD = _Currency("LRD")
+LSL = _Currency("LSL")
+LYD = _Currency("LYD")
+MAD = _Currency("MAD")
+MDL = _Currency("MDL")
+MGA = _Currency("MGA")
+MKD = _Currency("MKD")
+MMK = _Currency("MMK")
+MNT = _Currency("MNT")
+MOP = _Currency("MOP")
+MRU = _Currency("MRU")
+MUR = _Currency("MUR")
+MVR = _Currency("MVR")
+MWK = _Currency("MWK")
+MXN = _Currency("MXN")
+MXV = _Currency("MXV")
+MYR = _Currency("MYR")
+MZN = _Currency("MZN")
+NAD = _Currency("NAD")
+NGN = _Currency("NGN")
+NIO = _Currency("NIO")
+NOK = _Currency("NOK")
+NPR = _Currency("NPR")
+NZD = _Currency("NZD")
+OMR = _Currency("OMR")
+PAB = _Currency("PAB")
+PEN = _Currency("PEN")
+PGK = _Currency("PGK")
+PHP = _Currency("PHP")
+PKR = _Currency("PKR")
+PLN = _Currency("PLN")
+PYG = _Currency("PYG")
+QAR = _Currency("QAR")
+RON = _Currency("RON")
+RSD = _Currency("RSD")
+RUB = _Currency("RUB")
+RWF = _Currency("RWF")
+SAR = _Currency("SAR")
+SBD = _Currency("SBD")
+SCR = _Currency("SCR")
+SDG = _Currency("SDG")
+SEK = _Currency("SEK")
+SGD = _Currency("SGD")
+SHP = _Currency("SHP")
+SLE = _Currency("SLE")
+SOS = _Currency("SOS")
+SRD = _Currency("SRD")
+SSP = _Currency("SSP")
+STN = _Currency("STN")
+SVC = _Currency("SVC")
+SYP = _Currency("SYP")
+SZL = _Currency("SZL")
+THB = _Currency("THB")
+TJS = _Currency("TJS")
+TMT = _Currency("TMT")
+TND = _Currency("TND")
+TOP = _Currency("TOP")
+TRY = _Currency("TRY")
+TTD = _Currency("TTD")
+TWD = _Currency("TWD")
+TZS = _Currency("TZS")
+UAH = _Currency("UAH")
+UGX = _Currency("UGX")
+USD = _Currency("USD")
+USN = _Currency("USN")
+UYI = _Currency("UYI")
+UYU = _Currency("UYU")
+UYW = _Currency("UYW")
+UZS = _Currency("UZS")
+VED = _Currency("VED")
+VES = _Currency("VES")
+VND = _Currency("VND")
+VUV = _Currency("VUV")
+WST = _Currency("WST")
+XAF = _Currency("XAF")
+XAG = _Currency("XAG")
+XAU = _Currency("XAU")
+XBA = _Currency("XBA")
+XBB = _Currency("XBB")
+XBC = _Currency("XBC")
+XBD = _Currency("XBD")
+XCD = _Currency("XCD")
+XDR = _Currency("XDR")
+XOF = _Currency("XOF")
+XPD = _Currency("XPD")
+XPF = _Currency("XPF")
+XPT = _Currency("XPT")
+XSU = _Currency("XSU")
+XTS = _Currency("XTS")
+XUA = _Currency("XUA")
+XXX = _Currency("XXX")
+YER = _Currency("YER")
+ZAR = _Currency("ZAR")
+ZMW = _Currency("ZMW")
+ZWG = _Currency("ZWG")
 
 __all__ = [
-          "AED",
-          "AFN",
-          "ALL",
-          "AMD",
-          "ANG",
-          "AOA",
-          "ARS",
-          "AUD",
-          "AWG",
-          "AZN",
-          "BAM",
-          "BBD",
-          "BDT",
-          "BGN",
-          "BHD",
-          "BIF",
-          "BMD",
-          "BND",
-          "BOB",
-          "BOV",
-          "BRL",
-          "BSD",
-          "BTN",
-          "BWP",
-          "BYN",
-          "BZD",
-          "CAD",
-          "CDF",
-          "CHE",
-          "CHF",
-          "CHW",
-          "CLF",
-          "CLP",
-          "CNY",
-          "COP",
-          "COU",
-          "CRC",
-          "CUP",
-          "CVE",
-          "CZK",
-          "DJF",
-          "DKK",
-          "DOP",
-          "DZD",
-          "EGP",
-          "ERN",
-          "ETB",
-          "EUR",
-          "FJD",
-          "FKP",
-          "GBP",
-          "GEL",
-          "GHS",
-          "GIP",
-          "GMD",
-          "GNF",
-          "GTQ",
-          "GYD",
-          "HKD",
-          "HNL",
-          "HTG",
-          "HUF",
-          "IDR",
-          "ILS",
-          "INR",
-          "IQD",
-          "IRR",
-          "ISK",
-          "JMD",
-          "JOD",
-          "JPY",
-          "KES",
-          "KGS",
-          "KHR",
-          "KMF",
-          "KPW",
-          "KRW",
-          "KWD",
-          "KYD",
-          "KZT",
-          "LAK",
-          "LBP",
-          "LKR",
-          "LRD",
-          "LSL",
-          "LYD",
-          "MAD",
-          "MDL",
-          "MGA",
-          "MKD",
-          "MMK",
-          "MNT",
-          "MOP",
-          "MRU",
-          "MUR",
-          "MVR",
-          "MWK",
-          "MXN",
-          "MXV",
-          "MYR",
-          "MZN",
-          "NAD",
-          "NGN",
-          "NIO",
-          "NOK",
-          "NPR",
-          "NZD",
-          "OMR",
-          "PAB",
-          "PEN",
-          "PGK",
-          "PHP",
-          "PKR",
-          "PLN",
-          "PYG",
-          "QAR",
-          "RON",
-          "RSD",
-          "RUB",
-          "RWF",
-          "SAR",
-          "SBD",
-          "SCR",
-          "SDG",
-          "SEK",
-          "SGD",
-          "SHP",
-          "SLE",
-          "SOS",
-          "SRD",
-          "SSP",
-          "STN",
-          "SVC",
-          "SYP",
-          "SZL",
-          "THB",
-          "TJS",
-          "TMT",
-          "TND",
-          "TOP",
-          "TRY",
-          "TTD",
-          "TWD",
-          "TZS",
-          "UAH",
-          "UGX",
-          "USD",
-          "USN",
-          "UYI",
-          "UYU",
-          "UYW",
-          "UZS",
-          "VED",
-          "VES",
-          "VND",
-          "VUV",
-          "WST",
-          "XAF",
-          "XAG",
-          "XAU",
-          "XBA",
-          "XBB",
-          "XBC",
-          "XBD",
-          "XCD",
-          "XDR",
-          "XOF",
-          "XPD",
-          "XPF",
-          "XPT",
-          "XSU",
-          "XTS",
-          "XUA",
-          "XXX",
-          "YER",
-          "ZAR",
-          "ZMW",
-          "ZWG"
-          ]
+    "AED", "AFN", "ALL", "AMD", "ANG", "AOA", "ARS", "AUD", "AWG", "AZN", "BAM", "BBD", "BDT", "BGN", "BHD", "BIF",
+    "BMD", "BND", "BOB", "BOV", "BRL", "BSD", "BTN", "BWP", "BYN", "BZD", "CAD", "CDF", "CHE", "CHF", "CHW", "CLF",
+    "CLP", "CNY", "COP", "COU", "CRC", "CUP", "CVE", "CZK", "DJF", "DKK", "DOP", "DZD", "EGP", "ERN", "ETB", "EUR",
+    "FJD", "FKP", "GBP", "GEL", "GHS", "GIP", "GMD", "GNF", "GTQ", "GYD", "HKD", "HNL", "HTG", "HUF", "IDR", "ILS",
+    "INR", "IQD", "IRR", "ISK", "JMD", "JOD", "JPY", "KES", "KGS", "KHR", "KMF", "KPW", "KRW", "KWD", "KYD", "KZT",
+    "LAK", "LBP", "LKR", "LRD", "LSL", "LYD", "MAD", "MDL", "MGA", "MKD", "MMK", "MNT", "MOP", "MRU", "MUR", "MVR",
+    "MWK", "MXN", "MXV", "MYR", "MZN", "NAD", "NGN", "NIO", "NOK", "NPR", "NZD", "OMR", "PAB", "PEN", "PGK", "PHP",
+    "PKR", "PLN", "PYG", "QAR", "RON", "RSD", "RUB", "RWF", "SAR", "SBD", "SCR", "SDG", "SEK", "SGD", "SHP", "SLE",
+    "SOS", "SRD", "SSP", "STN", "SVC", "SYP", "SZL", "THB", "TJS", "TMT", "TND", "TOP", "TRY", "TTD", "TWD", "TZS",
+    "UAH", "UGX", "USD", "USN", "UYI", "UYU", "UYW", "UZS", "VED", "VES", "VND", "VUV", "WST", "XAF", "XAG", "XAU",
+    "XBA", "XBB", "XBC", "XBD", "XCD", "XDR", "XOF", "XPD", "XPF", "XPT", "XSU", "XTS", "XUA", "XXX", "YER", "ZAR",
+    "ZMW", "ZWG"
+    ]
