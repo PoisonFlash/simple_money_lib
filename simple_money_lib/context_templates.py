@@ -15,8 +15,7 @@ class DefaultCurrencyContext(BaseCurrencyContext):
     @classmethod
     def activate(cls):
         CurrencyContext.reset()
-        CurrencyContext.set_default_currency('SEK')
-        CurrencyContext.set_currency_symbol('kr', 'SEK')
+        CurrencyContext.set_default_currency('XXX')
         print("INFO", "Default currency context activated")
 
 
@@ -25,6 +24,7 @@ class TraderaCurrencyContext(BaseCurrencyContext):
     def activate(cls):
         CurrencyContext.set_default_currency('SEK')
         CurrencyContext.set_currency_symbol('kr', 'SEK')
+        print("INFO", "Tradera currency context activated")
 
 
 class DanishCurrencyContext(BaseCurrencyContext):

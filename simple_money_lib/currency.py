@@ -14,7 +14,14 @@ class Currency:
     _lock: threading.Lock = threading.Lock()
     strict_mode: bool = False  # Default to non-strict behavior
 
-    def __new__(cls, code: str):
+    # Class variables
+    default_sub_unit = 2  # Default decimal digits
+
+    def __new__(cls, code: str | Currency):
+        # If the input is already a Currency instance, return it directly
+        if isinstance(code, cls):
+            return code
+
         if not cls._is_valid_code(code):
             raise CurrencyCodeInvalid(code)
         code = code.upper().strip()
