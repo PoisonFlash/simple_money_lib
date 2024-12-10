@@ -211,7 +211,7 @@ class Money:
             )
         raise TypeError(self._ERR_MSG_MULT.format(op="/", type=type(other).__name__))
 
-    def divide_with_adjustment(self: M, other: object) -> tuple[M, Decimal]:
+    def divide_with_adjustment(self: M, other: object) -> tuple[M, M]:
         """
         Divide with adjustment keeps track of remainder amount lost due to quantization.
         Example:
