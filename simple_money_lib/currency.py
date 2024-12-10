@@ -153,6 +153,19 @@ class Currency:
     def __repr__(self):
         return f"Currency(code='{self.code}', name='{self.name}', numeric='{self.numeric}, sub_unit={self.sub_unit}')"
 
+    def __hash__(self) -> int:
+        """
+        Make a Currency instance hashable to allow Currency objects to be used as keys in dictionaries,
+        stored in sets, or compared for equality using hashing mechanisms.
+        """
+        return hash(self._code)
+
+    def __eq__(self, other: object) -> bool:
+        return self is other
+
+    def __ne__(self, other: object) -> bool:
+        return not self.__eq__(other)
+
 # Currency.strict_mode = False
 # a = Currency.register("USD", numeric=1000, sub_unit=8, name="Bitcoin")
 # print('A', repr(a))
@@ -160,3 +173,6 @@ class Currency:
 # print('B', repr(b))
 # print(a is b)
 # print(a is Currency('USD'))
+# print("== testing")
+# print(a == Currency('USD'))  # True
+# print(a == b)  # False
