@@ -1,7 +1,7 @@
 from typing import overload, TypeVar
 from decimal import Decimal
 import decimal
-import numbers
+import threading
 
 import simple_money_lib.money_parser as _mp
 from simple_money_lib.currency import Currency
@@ -18,9 +18,34 @@ class Money:
     # Class constants
     _ERR_MSG_ADD_SUB = "Cannot add or subtract Money objects with different currencies"
     _ERR_MSG_MULT = "Unsupported operand type(s) for {op}: 'Money' and '{type}'"
+    _ERR_MSG_DIV = "Cannot divide by a Money instance."
 
     # Class variables
-    rounding = decimal.ROUND_DOWN  # Specifies rounding logic for decimals conversion as per 'decimal' module
+    _thread_local = threading.local()
+
+    @classmethod
+    def get_rounding(cls):
+        """
+        Get the thread-local rounding mode. Defaults to decimal.ROUND_DOWN.
+        """
+        return getattr(cls._thread_local, "rounding", decimal.ROUND_DOWN)
+
+    @classmethod
+    def set_rounding(cls, rounding=decimal.ROUND_DOWN):
+        """
+        Set the thread-local rounding mode.
+        Parameters:
+            rounding: A valid rounding mode from the decimal module (e.g., decimal.ROUND_HALF_UP, decimal.ROUND_DOWN).
+        """
+        cls._thread_local.rounding = rounding
+
+    @classmethod
+    def reset_rounding(cls):
+        """
+        Reset the thread-local rounding mode to the default (decimal.ROUND_DOWN).
+        """
+        if hasattr(cls._thread_local, "rounding"):
+            del cls._thread_local.rounding
 
     @overload
     def __init__(self, money_string: str) -> None:
@@ -36,7 +61,7 @@ class Money:
 
     def __init__(self, *args, **kwargs):
 
-        # Note: always initialize self.currency first, as amount initialization requires self.currency to be set
+        # Dev note: always initialize self.currency first, as amount initialization requires self.currency to be set
 
         match args, kwargs:
             # Case: Positional amount and currency
@@ -117,7 +142,7 @@ class Money:
         """Quantize (ensure number of decimal digits) the amount respecting currency subunits and rounding rules"""
         return amount.quantize(
             Decimal("0." + "0" * self._get_currency_subunit()),
-            rounding=Money.rounding
+            rounding=Money.get_rounding()
         )
 
     @staticmethod
@@ -214,23 +239,48 @@ class Money:
     def divide_with_adjustment(self: M, other: object) -> tuple[M, M]:
         """
         Divide with adjustment keeps track of remainder amount lost due to quantization.
-        Example:
-            amount = Money("20 USD")
-            result = amount / 7
-            adjustment = amount - result * 7
-            print(amount, result, adjustment)
-            >>> 20 USD, 19.95 USD, 0.05 USD
-            In this case, adjustment is 0.05 USD
+        Useful for high precision transactions where it is important to keep track of remainder amounts, e.g.,
+        for accounting purposes.
+        Example (assuming default ROUND_DOWN behaviour):
+            result, adjustment = Money("20 USD").divide_with_adjustment(7)
+            print(result, adjustment) >>> 2.85 USD, 0.05 USD
+            Explanation: 2.85 * 7 => 19.95, 20.00 - 19.95 = 0.05
         """
-        # TODO Implement
+        if isinstance(other, _NUMERIC_TYPES):
+            if other == 0:
+                raise ZeroDivisionError
+            div_result = self.__class__(
+                amount=self._quantize_amount(self.amount / Decimal(other)),
+                currency=self.currency,
+            )
+            div_adj = self - div_result * other
+            return div_result, div_adj
+        raise TypeError(self._ERR_MSG_MULT.format(op="/", type=type(other).__name__))
 
     def __rtruediv__(self: M, other: object) -> M:
-        raise TypeError("Cannot divide by a Money instance.")
+        raise TypeError(self._ERR_MSG_DIV)
 
+    def __floordiv__(self: M, other: object) -> M:
+        if isinstance(other, _NUMERIC_TYPES):
+            if other == 0:
+                raise ZeroDivisionError
 
+            # Perform floor division
+            result_amount = self.amount // Decimal(other)
+
+            # Return a new Money object
+            return self.__class__(amount=self._quantize_amount(result_amount), currency=self.currency)
+
+        raise TypeError(self._ERR_MSG_MULT.format(op="//", type=type(other).__name__))
+
+def __rfloordiv__(self: M, other: object) -> M:
+    raise TypeError(self._ERR_MSG_DIV)
 
 a = Money(10, "USD")
 b = Money("20 USD")
 
-f = b / 7
+f = b // 6
 print(f, f * 7)
+h = a // 3
+print(a, h, h * 3)
+

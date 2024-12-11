@@ -7,8 +7,6 @@
 * Implement get_default_currency from context
 * Add documentation to Money class
 
-* True Division (__truediv__) - Divide Money by a numeric value.
-* Floor Division (__floordiv__) - Perform floor division on Money by a numeric value.
 * Modulo (__mod__) - Find the remainder when dividing Money by a numeric value.
 * Power (__pow__) - Raise Money to a numeric power.
 * Absolute Value (__abs__) - Return the absolute value of Money.

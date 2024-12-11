@@ -1,6 +1,10 @@
+import decimal
+
 import pytest
 from unittest.mock import patch
 import re
+
+import threading
 
 from decimal import Decimal
 from simple_money_lib.money_wip import Money
@@ -279,3 +283,157 @@ def test_multiplication_with_money_instances():
     # Test reverse multiplication of two Money instances
     with pytest.raises(TypeError, match=re.escape("Unsupported operand type(s) for *: 'Money' and 'Money'")):
         result = money2 * money1
+
+def test_truediv_with_valid_numeric_types():
+    usd = Currency("USD")
+    money = Money(20, usd)
+
+    # Division with int
+    result = money / 4
+    assert result == Money(5, usd)
+
+    # Division with float
+    result = money / 2.5
+    assert result == Money(8, usd)
+
+    # Division with Decimal
+    Money.set_rounding(decimal.ROUND_HALF_DOWN)
+    result = money / Decimal("3")
+    assert result == Money(6.67, usd)
+
+    Money.set_rounding(decimal.ROUND_DOWN)
+    result = money / Decimal("3")
+    assert result == Money(6.66, usd)
+
+
+def test_truediv_with_zero():
+    usd = Currency("USD")
+    money = Money(20, usd)
+
+    # Division by zero
+    with pytest.raises(ZeroDivisionError):
+        result = money / 0
+
+
+def test_truediv_with_invalid_types():
+    usd = Currency("USD")
+    money = Money(20, usd)
+
+    # Division with unsupported type
+    with pytest.raises(TypeError, match="Unsupported operand type\\(s\\) for /: 'Money' and 'str'"):
+        result = money / "string"
+
+    with pytest.raises(TypeError, match="Unsupported operand type\\(s\\) for /: 'Money' and 'list'"):
+        result = money / [1, 2]
+
+
+def test_divide_with_adjustment():
+    Money.set_rounding(decimal.ROUND_DOWN)
+    usd = Currency("USD")
+    money = Money(20, usd)
+
+    # Division with remainder
+    result, adjustment = money.divide_with_adjustment(7)
+    assert result == Money(2.85, usd)
+    assert adjustment == Money(0.05, usd)
+
+    # Verify original value
+    assert (result * 7 + adjustment) == money
+
+    # No remainder
+    result, adjustment = money.divide_with_adjustment(4)
+    assert result == Money(5, usd)
+    assert adjustment == Money(0, usd)
+
+def test_divide_with_adjustment_half_down():
+    Money.set_rounding(decimal.ROUND_HALF_DOWN)
+    usd = Currency("USD")
+    money = Money(20, usd)
+
+    # Division with remainder
+    result, adjustment = money.divide_with_adjustment(7)
+    assert result == Money(2.86, usd)
+    assert adjustment == Money(-0.02, usd)
+
+    # Verify original value
+    assert (result * 7 + adjustment) == money
+
+    # No remainder
+    result, adjustment = money.divide_with_adjustment(4)
+    assert result == Money(5, usd)
+    assert adjustment == Money(0, usd)
+    Money.set_rounding(decimal.ROUND_DOWN)
+
+def test_rtruediv_unsupported():
+    usd = Currency("USD")
+    money = Money(20, usd)
+
+    # Reverse division (unsupported)
+    with pytest.raises(TypeError, match="Cannot divide by a Money instance."):
+        result = 10 / money
+
+def test_rounding_single_thread():
+    Money.set_rounding(decimal.ROUND_HALF_UP)
+    money = Money(10.25, "USD")
+    result = money / 3
+    assert str(result) == "3.42 USD"
+
+    Money.set_rounding(decimal.ROUND_DOWN)
+    result = money / 3
+    assert str(result) == "3.41 USD"
+
+def test_rounding_multi_thread():
+    results = {}
+
+    def thread_func(thread_id, rounding_mode):
+        Money.set_rounding(rounding_mode)
+        money = Money(10.25, "USD")
+        results[thread_id] = str(money / 3)
+
+    threads = [
+        threading.Thread(target=thread_func, args=(1, decimal.ROUND_HALF_UP)),
+        threading.Thread(target=thread_func, args=(2, decimal.ROUND_DOWN)),
+    ]
+
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    assert results[1] == "3.42 USD"
+    assert results[2] == "3.41 USD"
+
+def test_floordiv_money():
+    usd = Currency("USD")
+    money = Money(20, usd)
+
+    result = money // 6
+    assert result == Money(3, usd)
+
+def test_floordiv_zero():
+    usd = Currency("USD")
+    money = Money(20, usd)
+
+    with pytest.raises(ZeroDivisionError):
+        result = money // 0
+
+def test_floordiv_invalid():
+    usd = Currency("USD")
+    money = Money(20, usd)
+
+    with pytest.raises(TypeError, match=re.escape("Unsupported operand type(s) for //: 'Money' and 'str'")):
+        result = money // "string"
+
+def test_rfloordiv_invalid():
+    usd = Currency("USD")
+    money = Money(20, usd)
+
+    with pytest.raises(TypeError):
+        result = 10 // money
+
+def test_rfloordiv_invalid2():
+    usd = Currency("USD")
+    money = Money(20, usd)
+    # Note that this is actually not quite correct, the int's error is used here, not rfloordiv's.
+    with pytest.raises(TypeError, match=re.escape("unsupported operand type(s) for //: 'int' and 'Money'")):
+        result = 10 // money
