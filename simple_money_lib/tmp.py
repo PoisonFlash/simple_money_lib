@@ -9,8 +9,8 @@
 # eur = Currency(EUR)
 # print(eur is EUR)
 
-from simple_money_lib.money_wip import Money
+from simple_money_lib.money_wip import Money, Currency
 amount = Money("20 USD")
-result = amount / 7
-adjustment = amount - result * 7
-print(amount, result, adjustment)
+usd = Currency("USD")
+money = Money(100, usd)
+

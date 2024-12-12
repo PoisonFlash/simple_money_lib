@@ -20,6 +20,7 @@ class Money:
     _ERR_MSG_MULT = "Unsupported operand type(s) for {op}: 'Money' and '{type}'"
     _ERR_MSG_DIV = "Cannot divide by a Money instance."
     _ERR_MSG_EXPN = "Exponentiation is not supported for Money objects."
+    _ERR_MSG_COMP = "Cannot compare Money objects with different currencies."
 
     # Class-level lock for thread-safe global changes
     _global_lock = threading.Lock()
@@ -346,3 +347,70 @@ class Money:
 
         # Return a new Money object with the rounded amount
         return self.__class__(amount=amount, currency=self.currency)
+
+    def __lt__(self: M, other: object) -> bool:
+        if not isinstance(other, Money):
+            return NotImplemented
+        if self.currency != other.currency:
+            raise TypeError(self._ERR_MSG_COMP)
+        return self.amount < other.amount
+
+    def __le__(self: M, other: object) -> bool:
+        if not isinstance(other, Money):
+            return NotImplemented
+        if self.currency != other.currency:
+            raise TypeError(self._ERR_MSG_COMP)
+        return self.amount <= other.amount
+
+    def __gt__(self: M, other: object) -> bool:
+        if not isinstance(other, Money):
+            return NotImplemented
+        if self.currency != other.currency:
+            raise TypeError(self._ERR_MSG_COMP)
+        return self.amount > other.amount
+
+    def __ge__(self: M, other: object) -> bool:
+        if not isinstance(other, Money):
+            return NotImplemented
+        if self.currency != other.currency:
+            raise TypeError(self._ERR_MSG_COMP)
+        return self.amount >= other.amount
+
+    def __iter__(self):
+        """
+        Unpack the Money object as a tuple: (amount, currency).
+        """
+        return iter((self.amount, self.currency))
+
+    def as_dict(self):
+        """
+        Return a dictionary representation of the Money object.
+        """
+        return {'amount': self.amount, 'currency': self.currency}
+
+    def __getitem__(self, key):
+        """
+        Enable dictionary-style access for unpacking.
+        """
+        return self.as_dict()[key]
+
+    def keys(self):
+        """
+        Return a list of keys representing the components of the Money object.
+        Keys: ['amount', 'currency']
+        """
+        return ['amount', 'currency']
+
+    def items(self):
+        """
+        Return an iterator of (key, value) pairs: ('amount', amount), ('currency', currency).
+        """
+        return iter([('amount', self.amount), ('currency', self.currency)])
+
+    def __contains__(self, key):
+        """
+        Check if a key is a valid component of the Money object.
+        """
+        return key in self.keys()
+
+

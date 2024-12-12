@@ -9,7 +9,7 @@ import threading
 from decimal import Decimal
 from simple_money_lib.money_wip import Money
 from simple_money_lib.currency import Currency
-from simple_money_lib.currencies.all import EUR, USD, RUB
+from simple_money_lib.currencies.all import EUR
 
 
 @pytest.fixture(autouse=True)
@@ -258,19 +258,19 @@ def test_multiplication_with_invalid_types():
 
     # Test multiplication with string
     with pytest.raises(TypeError, match="Unsupported operand type\\(s\\) for \\*: 'Money' and 'str'"):
-        result = money * "string"
+        money * "string"
 
     # Test reverse multiplication with string
     with pytest.raises(TypeError, match="Unsupported operand type\\(s\\) for \\*: 'Money' and 'str'"):
-        result = "string" * money
+        "string" * money
 
     # Test multiplication with list
     with pytest.raises(TypeError, match="Unsupported operand type\\(s\\) for \\*: 'Money' and 'list'"):
-        result = money * [1, 2]
+        money * [1, 2]
 
     # Test reverse multiplication with list
     with pytest.raises(TypeError, match="Unsupported operand type\\(s\\) for \\*: 'Money' and 'list'"):
-        result = [1, 2] * money
+        [1, 2] * money
 
 
 def test_multiplication_with_money_instances():
@@ -280,11 +280,11 @@ def test_multiplication_with_money_instances():
 
     # Test multiplication of two Money instances
     with pytest.raises(TypeError, match=re.escape("Unsupported operand type(s) for *: 'Money' and 'Money'")):
-        result = money1 * money2
+        money1 * money2
 
     # Test reverse multiplication of two Money instances
     with pytest.raises(TypeError, match=re.escape("Unsupported operand type(s) for *: 'Money' and 'Money'")):
-        result = money2 * money1
+        money2 * money1
 
 def test_truediv_with_valid_numeric_types():
     usd = Currency("USD")
@@ -314,7 +314,7 @@ def test_truediv_with_zero():
 
     # Division by zero
     with pytest.raises(ZeroDivisionError):
-        result = money / 0
+        money / 0
 
 
 def test_truediv_with_invalid_types():
@@ -323,10 +323,10 @@ def test_truediv_with_invalid_types():
 
     # Division with unsupported type
     with pytest.raises(TypeError, match="Unsupported operand type\\(s\\) for /: 'Money' and 'str'"):
-        result = money / "string"
+        money / "string"
 
     with pytest.raises(TypeError, match="Unsupported operand type\\(s\\) for /: 'Money' and 'list'"):
-        result = money / [1, 2]
+        money / [1, 2]
 
 
 def test_divide_with_adjustment():
@@ -372,7 +372,7 @@ def test_rtruediv_unsupported():
 
     # Reverse division (unsupported)
     with pytest.raises(TypeError, match="Cannot divide by a Money instance."):
-        result = 10 / money
+        10 / money
 
 def test_rounding_single_thread():
     Money.set_rounding(decimal.ROUND_HALF_UP)
@@ -417,21 +417,21 @@ def test_floordiv_zero():
     money = Money(20, usd)
 
     with pytest.raises(ZeroDivisionError):
-        result = money // 0
+        money // 0
 
 def test_floordiv_invalid():
     usd = Currency("USD")
     money = Money(20, usd)
 
     with pytest.raises(TypeError, match=re.escape("Unsupported operand type(s) for //: 'Money' and 'str'")):
-        result = money // "string"
+        money // "string"
 
 def test_rfloordiv_invalid():
     usd = Currency("USD")
     money = Money(20, usd)
 
     with pytest.raises(TypeError, match="Cannot divide by a Money instance."):
-        result = 10 // money
+        10 // money
 
 def test_modulo_with_valid_numeric_types():
     usd = Currency("USD")
@@ -455,7 +455,7 @@ def test_modulo_with_zero():
 
     # Modulo by zero
     with pytest.raises(ZeroDivisionError):
-        result = money % 0
+        money % 0
 
 def test_modulo_with_invalid_types():
     usd = Currency("USD")
@@ -463,11 +463,11 @@ def test_modulo_with_invalid_types():
 
     # Modulo with string
     with pytest.raises(TypeError, match="Unsupported operand type\\(s\\) for %: 'Money' and 'str'"):
-        result = money % "string"
+        money % "string"
 
     # Reverse modulo with int
     with pytest.raises(TypeError, match="Cannot divide by a Money instance."):
-        result = 6 % money
+        6 % money
 
 def test_modulo_by_money():
     usd = Currency("USD")
@@ -475,7 +475,7 @@ def test_modulo_by_money():
 
     # Modulo by zero
     with pytest.raises(TypeError, match="Cannot divide by a Money instance."):
-        result = 100 % money
+        100 % money
 
 def test_exponentiation_not_supported():
     usd = Currency("USD")
@@ -483,11 +483,11 @@ def test_exponentiation_not_supported():
 
     # Forward exponentiation
     with pytest.raises(TypeError, match="Exponentiation is not supported for Money objects."):
-        result = money ** 2
+        money ** 2
 
     # Reverse exponentiation
     with pytest.raises(TypeError, match="Exponentiation is not supported for Money objects."):
-        result = 2 ** money
+        2 ** money
 
 def test_abs_positive_value():
     usd = Currency("USD")
@@ -583,3 +583,99 @@ def test_round_respects_default_rounding():
     # Default rounding mode ROUND_HALF_UP
     result = round(amount, 1)
     assert result == Money("2.40", usd)
+
+def test_comparisons_valid():
+    usd = Currency("USD")
+    money1 = Money("10.00", usd)
+    money2 = Money("15.00", usd)
+
+    # Valid comparisons
+    assert money1 < money2
+    assert money1 <= money2
+    assert money2 > money1
+    assert money2 >= money1
+    assert money1 <= Money("10.00", usd)
+    assert money1 >= Money("10.00", usd)
+
+def test_comparisons_invalid_currency():
+    usd = Currency("USD")
+    eur = Currency("EUR")
+    money1 = Money("10.00", usd)
+    money2 = Money("10.00", eur)
+
+    # Invalid comparison due to different currencies
+    with pytest.raises(TypeError, match="Cannot compare Money objects with different currencies."):
+        _ = money1 < money2
+
+def test_comparisons_invalid_type():
+    usd = Currency("USD")
+    money1 = Money("10.00", usd)
+
+    # Comparison with non-Money object should raise TypeError
+    with pytest.raises(TypeError, match="'<' not supported between instances of 'Money' and 'int'"):
+        _ = money1 < 10
+
+def test_iter():
+    eur = Currency("EUR")
+    money = Money(100, eur)
+
+    # Unpacking as a tuple
+    amount, currency = money
+    assert amount == 100
+    assert currency is eur
+
+    # Iterating over the Money object
+    result = list(money)
+    assert result == [100, eur]
+
+def test_as_dict():
+    usd = Currency("USD")
+    money = Money(100, usd)
+
+    # Dictionary representation
+    assert money.as_dict() == {'amount': 100, 'currency': usd}
+
+def test_getitem():
+    usd = Currency("USD")
+    money = Money(100, usd)
+
+    # Accessing components like a dictionary
+    assert money['amount'] == 100
+    assert money['currency'] == usd
+
+    # Attempting to access an invalid key
+    with pytest.raises(KeyError, match="'invalid_key'"):
+        _ = money['invalid_key']
+
+def test_keys():
+    usd = Currency("USD")
+    money = Money(100, usd)
+
+    # Check available keys
+    assert money.keys() == ['amount', 'currency']
+
+def test_contains():
+    usd = Currency("USD")
+    money = Money(100, usd)
+
+    # Valid keys
+    assert 'amount' in money
+    assert 'currency' in money
+
+    # Invalid keys
+    assert 'invalid_key' not in money
+
+def test_items():
+    usd = Currency("USD")
+    money = Money(100, usd)
+
+    # Iterating over key-value pairs
+    items = list(money.items())
+    assert items == [('amount', 100), ('currency', usd)]
+
+    # Direct unpacking from items
+    for key, value in money.items():
+        if key == 'amount':
+            assert value == 100
+        elif key == 'currency':
+            assert value == usd
