@@ -76,10 +76,6 @@ def test_money_invalid_mixed_arguments():
         Money(10, amount=15)
 
 def test_money_invalid_string_parse():
-    with pytest.raises(ValueError, match="Unknown currency: 'invalid'"):
-        Money("invalid USD")  # Invalid string input
-
-def test_money_invalid_string_parse():
     with pytest.raises(ValueError, match="Invalid value: 'USD invalid'"):
         Money("USD invalid")  # Invalid string input
 
@@ -428,12 +424,50 @@ def test_rfloordiv_invalid():
     usd = Currency("USD")
     money = Money(20, usd)
 
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match="Cannot divide by a Money instance."):
         result = 10 // money
 
-def test_rfloordiv_invalid2():
+def test_modulo_with_valid_numeric_types():
     usd = Currency("USD")
     money = Money(20, usd)
-    # Note that this is actually not quite correct, the int's error is used here, not rfloordiv's.
-    with pytest.raises(TypeError, match=re.escape("unsupported operand type(s) for //: 'int' and 'Money'")):
-        result = 10 // money
+
+    # Modulo with int
+    result = money % 6
+    assert result == Money(2, usd)
+
+    # Modulo with float
+    result = money % 7.5
+    assert result == Money(5, usd)
+
+    # Modulo with Decimal
+    result = money % Decimal("7")
+    assert result == Money(6, usd)
+
+def test_modulo_with_zero():
+    usd = Currency("USD")
+    money = Money(20, usd)
+
+    # Modulo by zero
+    with pytest.raises(ZeroDivisionError):
+        result = money % 0
+
+def test_modulo_with_invalid_types():
+    usd = Currency("USD")
+    money = Money(20, usd)
+
+    # Modulo with string
+    with pytest.raises(TypeError, match="Unsupported operand type\\(s\\) for %: 'Money' and 'str'"):
+        result = money % "string"
+
+    # Reverse modulo with int
+    with pytest.raises(TypeError, match="Cannot divide by a Money instance."):
+        result = 6 % money
+
+def test_modulo_by_money():
+    usd = Currency("USD")
+    money = Money(20, usd)
+
+    # Modulo by zero
+    with pytest.raises(TypeError, match="Cannot divide by a Money instance."):
+        result = 100 % money
+

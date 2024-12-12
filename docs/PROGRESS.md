@@ -15,3 +15,8 @@
 * Rounding (__round__) - Round the Money amount to a specified number of decimal places.
 * Unpacking (*, **)
 ## Completed Tasks
+
+
+## Notes
+* All divisions ensure quantization, i.e., correct number of decimal digits is always preserved.
+* __rmod__ operation like 5 % Currency("20 USD") raises __TypeError__. In contrast with __*moneyed*__ where: 5 % Currency(20, USD) => Money(1, USD).

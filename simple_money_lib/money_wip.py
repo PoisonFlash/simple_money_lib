@@ -238,13 +238,14 @@ class Money:
 
     def divide_with_adjustment(self: M, other: object) -> tuple[M, M]:
         """
-        Divide with adjustment keeps track of remainder amount lost due to quantization.
+        Divide (/) with adjustment keeps track of remainder amount lost due to quantization.
         Useful for high precision transactions where it is important to keep track of remainder amounts, e.g.,
         for accounting purposes.
         Example (assuming default ROUND_DOWN behaviour):
             result, adjustment = Money("20 USD").divide_with_adjustment(7)
             print(result, adjustment) >>> 2.85 USD, 0.05 USD
             Explanation: 2.85 * 7 => 19.95, 20.00 - 19.95 = 0.05
+        Note: Use modulo (%) for
         """
         if isinstance(other, _NUMERIC_TYPES):
             if other == 0:
@@ -273,14 +274,29 @@ class Money:
 
         raise TypeError(self._ERR_MSG_MULT.format(op="//", type=type(other).__name__))
 
-def __rfloordiv__(self: M, other: object) -> M:
-    raise TypeError(self._ERR_MSG_DIV)
+    def __rfloordiv__(self: M, other: object) -> M:
+        raise TypeError(self._ERR_MSG_DIV)
+
+    def __mod__(self: M, other: object) -> M:
+        if isinstance(other, _NUMERIC_TYPES):
+            if other == 0:
+                raise ZeroDivisionError
+
+            # Perform modulo operation
+            remainder = self.amount % Decimal(other)
+
+            # Quantize the result
+            quantized_remainder = self._quantize_amount(remainder)
+
+            return self.__class__(amount=quantized_remainder, currency=self.currency)
+
+        raise TypeError(self._ERR_MSG_MULT.format(op="%", type=type(other).__name__))
+
+    def __rmod__(self: M, other: object) -> M:
+        raise TypeError(self._ERR_MSG_DIV)
+
 
 a = Money(10, "USD")
 b = Money("20 USD")
 
-f = b // 6
-print(f, f * 7)
-h = a // 3
-print(a, h, h * 3)
 
