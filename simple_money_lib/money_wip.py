@@ -19,33 +19,58 @@ class Money:
     _ERR_MSG_ADD_SUB = "Cannot add or subtract Money objects with different currencies"
     _ERR_MSG_MULT = "Unsupported operand type(s) for {op}: 'Money' and '{type}'"
     _ERR_MSG_DIV = "Cannot divide by a Money instance."
+    _ERR_MSG_EXPN = "Exponentiation is not supported for Money objects."
 
-    # Class variables
+    # Class-level lock for thread-safe global changes
+    _global_lock = threading.Lock()
     _thread_local = threading.local()
+
+    # Global default rounding mode
+    _global_default_rounding = decimal.ROUND_DOWN
 
     @classmethod
     def get_rounding(cls):
         """
-        Get the thread-local rounding mode. Defaults to decimal.ROUND_DOWN.
+        Get the rounding mode. Check thread-local first; fallback to global default.
         """
-        return getattr(cls._thread_local, "rounding", decimal.ROUND_DOWN)
+        return getattr(cls._thread_local, "rounding", cls._global_default_rounding)
 
     @classmethod
-    def set_rounding(cls, rounding=decimal.ROUND_DOWN):
+    def set_rounding(cls, rounding=None):
         """
         Set the thread-local rounding mode.
         Parameters:
-            rounding: A valid rounding mode from the decimal module (e.g., decimal.ROUND_HALF_UP, decimal.ROUND_DOWN).
+            rounding: A valid rounding mode from the decimal module (e.g., decimal.ROUND_HALF_UP).
         """
+        if rounding is None:
+            rounding = cls.get_global_rounding()
         cls._thread_local.rounding = rounding
 
     @classmethod
     def reset_rounding(cls):
         """
-        Reset the thread-local rounding mode to the default (decimal.ROUND_DOWN).
+        Reset the thread-local rounding mode to use the global default.
         """
         if hasattr(cls._thread_local, "rounding"):
             del cls._thread_local.rounding
+
+    @classmethod
+    def set_global_rounding(cls, rounding):
+        """
+        Set the global default rounding mode in a thread-safe manner.
+        Parameters:
+            rounding: A valid rounding mode from the decimal module (e.g., ROUND_HALF_UP).
+        """
+        with cls._global_lock:
+            cls._global_default_rounding = rounding
+
+    @classmethod
+    def get_global_rounding(cls):
+        """
+        Get the current global default rounding mode.
+        """
+        with cls._global_lock:
+            return cls._global_default_rounding
 
     @overload
     def __init__(self, money_string: str) -> None:
@@ -295,8 +320,29 @@ class Money:
     def __rmod__(self: M, other: object) -> M:
         raise TypeError(self._ERR_MSG_DIV)
 
+    def __pow__(self: M, exponent: object) -> M:
+        raise TypeError(self._ERR_MSG_EXPN)
 
-a = Money(10, "USD")
-b = Money("20 USD")
+    def __rpow__(self: M, base: object) -> M:
+        raise TypeError(self._ERR_MSG_EXPN)
 
+    def __abs__(self: M) -> M:
+        return self.__class__(amount=abs(self.amount), currency=self.currency)
 
+    def __round__(self: M, number_of_decimal_digits: int) -> M:
+        """
+        Round the Money object to the specified number of decimal places,
+        respecting the predefined currency subunit and the rounding rules of the class.
+        """
+        # If the requested precision exceeds the subunit, return the Money object as is
+        if number_of_decimal_digits >= self._get_currency_subunit():
+            return self
+
+        # Calculate the target precision as a Decimal (e.g., "0.1" for 1 decimal place)
+        target_precision = Decimal("1").scaleb(-number_of_decimal_digits)
+
+        # Apply quantization with the current rounding rule
+        amount = self.amount.quantize(target_precision, rounding=self.get_rounding())
+
+        # Return a new Money object with the rounded amount
+        return self.__class__(amount=amount, currency=self.currency)

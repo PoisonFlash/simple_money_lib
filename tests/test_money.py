@@ -11,11 +11,17 @@ from simple_money_lib.money_wip import Money
 from simple_money_lib.currency import Currency
 from simple_money_lib.currencies.all import EUR, USD, RUB
 
-# @pytest.fixture(autouse=True)
-# def mock_user_defined_currencies():
-#     """Mock _user_defined_currencies with a temporary dictionary."""
-#     with patch("simple_money_lib.currency._user_defined_currencies", {}):
-#         yield
+
+@pytest.fixture(autouse=True)
+def reset_global_rounding():
+    # Save the original rounding mode
+    original_rounding = Money.get_global_rounding()
+
+    # Yield control to the test
+    yield
+
+    # Reset the global rounding mode after each test
+    Money.set_global_rounding(original_rounding)
 
 @pytest.fixture(autouse=True)
 def mock_save_user_currencies():
@@ -471,3 +477,109 @@ def test_modulo_by_money():
     with pytest.raises(TypeError, match="Cannot divide by a Money instance."):
         result = 100 % money
 
+def test_exponentiation_not_supported():
+    usd = Currency("USD")
+    money = Money(100, usd)
+
+    # Forward exponentiation
+    with pytest.raises(TypeError, match="Exponentiation is not supported for Money objects."):
+        result = money ** 2
+
+    # Reverse exponentiation
+    with pytest.raises(TypeError, match="Exponentiation is not supported for Money objects."):
+        result = 2 ** money
+
+def test_abs_positive_value():
+    usd = Currency("USD")
+    money = Money(50.05, usd)
+    assert abs(money) == Money(50.05, usd)
+
+def test_abs_negative_value():
+    usd = Currency("USD")
+    money = Money(-50, usd)
+    assert abs(money) == Money(50, usd)
+
+def test_abs_zero_value():
+    usd = Currency("USD")
+    money = Money(0, usd)
+    assert abs(money) == Money(0, usd)
+
+from decimal import ROUND_HALF_UP, ROUND_HALF_DOWN, ROUND_FLOOR, ROUND_CEILING
+
+def test_set_rounding_explicit_value():
+    # Explicitly set thread-local rounding
+    Money.set_rounding(ROUND_HALF_DOWN)
+    assert Money.get_rounding() == ROUND_HALF_DOWN
+
+def test_set_rounding_defaults_to_global():
+    # Set global default rounding
+    Money.set_global_rounding(ROUND_CEILING)
+
+    # Set thread-local rounding to use the global default
+    Money.set_rounding()
+    assert Money.get_rounding() == ROUND_CEILING
+
+def test_set_global_rounding_changes_default():
+    # Set a new global default
+    Money.set_global_rounding(ROUND_FLOOR)
+
+    # Reset thread-local rounding to use the global default
+    Money.reset_rounding()
+    assert Money.get_rounding() == ROUND_FLOOR
+
+def test_reset_rounding_uses_global_default():
+    # Set global rounding to ROUND_HALF_UP
+    Money.set_global_rounding(ROUND_HALF_UP)
+
+    # Override thread-local rounding
+    Money.set_rounding(ROUND_FLOOR)
+    assert Money.get_rounding() == ROUND_FLOOR
+
+    # Reset to use global default
+    Money.reset_rounding()
+    assert Money.get_rounding() == ROUND_HALF_UP
+
+def test_thread_local_rounding_is_independent():
+    # Set global rounding to ROUND_HALF_DOWN
+    Money.set_global_rounding(ROUND_HALF_DOWN)
+
+    # Thread 1: Set ROUND_CEILING
+    Money.set_rounding(ROUND_CEILING)
+    assert Money.get_rounding() == ROUND_CEILING
+
+    # Reset and ensure global default applies
+    Money.reset_rounding()
+    assert Money.get_rounding() == ROUND_HALF_DOWN
+
+def test_round_to_fewer_decimals():
+    usd = Currency("USD")
+    amount = Money("2.359", usd)
+
+    # Round to 1 decimal place
+    result = round(amount, 1)
+    assert result == Money("2.30", usd)
+
+def test_round_to_more_decimals_than_subunit():
+    usd = Currency("USD")
+    amount = Money("2.35", usd)
+
+    # Attempt to round to 3 decimal places (exceeds subunit precision)
+    result = round(amount, 3)
+    assert result == amount  # Should remain unchanged
+
+def test_round_to_zero_decimals():
+    usd = Currency("USD")
+    amount = Money("2.359", usd)
+
+    # Round to 0 decimal places
+    result = round(amount, 0)
+    assert result == Money("2", usd)
+
+def test_round_respects_default_rounding():
+    Money.set_global_rounding(ROUND_HALF_UP)
+    usd = Currency("USD")
+    amount = Money("2.359", usd)
+
+    # Default rounding mode ROUND_HALF_UP
+    result = round(amount, 1)
+    assert result == Money("2.40", usd)
