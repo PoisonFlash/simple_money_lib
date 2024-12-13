@@ -143,8 +143,21 @@ class Currency:
 
     @classmethod
     def all_currencies(cls) -> Dict[str, Currency]:
-        """Return a snapshot of all registered currencies."""
+        """Return a snapshot of all known currencies, including dynamically registered ones."""
+        missing_codes = []
         with cls._lock:
+            # Collect missing codes that are not yet instantiated
+            for source in (_predefined_currencies, _user_defined_currencies):
+                for code in source:
+                    if code not in cls._registry:
+                        missing_codes.append(code)
+
+        # Instantiate missing currencies outside the lock
+        for code in missing_codes:
+            cls(code)  # This safely calls __new__, which uses the lock internally
+
+        with cls._lock:
+            # Return a copy of the fully populated registry
             return cls._registry.copy()
 
     def __str__(self):
@@ -166,13 +179,3 @@ class Currency:
     def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
 
-# Currency.strict_mode = False
-# a = Currency.register("USD", numeric=1000, sub_unit=8, name="Bitcoin")
-# print('A', repr(a))
-# b = Currency.register("BTC", numeric=1000, sub_unit=8, name="Bitcoin")
-# print('B', repr(b))
-# print(a is b)
-# print(a is Currency('USD'))
-# print("== testing")
-# print(a == Currency('USD'))  # True
-# print(a == b)  # False
