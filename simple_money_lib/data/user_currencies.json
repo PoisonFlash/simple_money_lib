@@ -8,5 +8,10 @@
         "numeric": null,
         "sub_unit": 18,
         "name": "Ethereum"
+    },
+    "BTC_8": {
+        "numeric": null,
+        "sub_unit": 8,
+        "name": "Bitcoin (8 decimals)"
     }
 }

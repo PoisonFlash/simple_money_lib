@@ -129,6 +129,9 @@ class Currency:
                 save_user_currencies(_user_defined_currencies)
             # Create a new currency instance using __new__
             instance = cls(code)
+            # ADDED: Assure that the newly registered currency is in the register
+            with cls._lock:
+                cls._registry[code] = instance
 
         return instance
 

@@ -1,11 +1,56 @@
+from abc import ABC, abstractmethod
+
 import re
 from typing import Tuple
+import decimal
 from decimal import Decimal
 
 from simple_money_lib.currency_context import CurrencyContext
+from simple_money_lib import Currency
+
+class MoneyParser(ABC):
+    @abstractmethod
+    def parse(self, money_string: str) -> tuple[Decimal, str | None]:
+        """Parse a money string into an amount and currency."""
+        pass
+
+class MoneyParserBase(MoneyParser):
+    """
+    This parser implements parsing of simple strings representing Money, without complex formatting.
+    For example: "21.34 USD", "EUR 567.89", or "CNY1.23". "123.45" without currency is also ok.
+    It will fail on more complex strings where numbers would not follow Python's format.
+    Raises:
+        ValueError
+    """
+    def parse(self, money_string: str)  -> tuple[Decimal, str | None]:
+        if code := self.match_currency(money_string):
+            amount_str = money_string.replace(code, "", 1).strip()
+        else:
+            amount_str = money_string
+        try:
+            amount_decimal = Decimal(amount_str)
+        except decimal.InvalidOperation:
+            raise ValueError(f"Unable to convert amount: {money_string}")
+        return amount_decimal, code
 
 
-class MoneyParser:
+    @staticmethod
+    def match_currency(money_string: str) -> str | None:
+        known_currencies = sorted(Currency.all_currencies().keys(), key=len, reverse=True)
+        # Iterate to find the longest match
+        for code in known_currencies:
+            if code[-1].isdigit():  # Currency ends with a digit
+                # Check if it starts with the code + space, or ends with the code
+                if money_string.startswith(f"{code} ") or money_string.endswith(code):
+                    return code
+            else:  # Standard matching
+                if money_string.startswith(code) or money_string.endswith(code):
+                    return code
+        return None
+
+
+
+class MoneyParserComplex:
     thousand_separators = [".", ",", "'", " ", "\xa0", "\u202F", "\u066C", "\uFF0C"]
     decimal_separators = [".", ",", "\u066B", "\uFF0E"]
     currency_symbols = ["$", "€", "£", "¥", "₹"]
@@ -138,7 +183,7 @@ if __name__ == '__main__':
     from context_templates import DefaultCurrencyContext, DanishCurrencyContext
     DefaultCurrencyContext.activate()
     # DanishCurrencyContext.activate()
-    mp = MoneyParser()
+    mp = MoneyParserComplex()
     for item in test_values:
         try:
             amount, currency = mp.parse(item)

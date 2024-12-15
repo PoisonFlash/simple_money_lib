@@ -117,7 +117,7 @@ class Money:
             # Case: Single string positional argument (e.g., "100 USD")
             case (money_string, ), {} if isinstance(money_string, str):
                 # TODO: Implement switchable parsers
-                parsed_amount, parsed_currency = _mp.MoneyParser().parse(money_string)
+                parsed_amount, parsed_currency = _mp.MoneyParserComplex().parse(money_string)
                 self.currency = Currency(parsed_currency) if parsed_currency else self._get_default_currency()
                 self.amount = self._validate_amount(parsed_amount)
 
