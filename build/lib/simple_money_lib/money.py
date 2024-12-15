@@ -1,14 +1,14 @@
-from moneyed import *
 from moneyed import Money as _BaseMoney
 
-import simple_money_lib.money_parser as _mp
+import simple_money_lib.parsers.base_parser as _mp
+import simple_money_lib.parsers.complex_parser
 
 
 class Money(_BaseMoney):
     def __init__(self, *args, **kwargs):
         if len(args) == 1 and isinstance(args[0], str):
             # Handle the case where a single string is passed
-            amount, currency = _mp.MoneyParserComplex().parse(args[0])
+            amount, currency = simple_money_lib.parsers.complex_parser.ComplexMoneyParser().parse(args[0])
             # Call the original Money constructor with parsed values
             super().__init__(amount=amount, currency=currency)
         else:

@@ -2,7 +2,7 @@ import pytest
 
 from decimal import Decimal
 
-from simple_money_lib.money_parser import MoneyParserComplex
+from simple_money_lib.parsers.complex_parser import ComplexMoneyParser
 from simple_money_lib.context_templates import *
 
 
@@ -29,7 +29,7 @@ def test_zero_decimals():
         ("0,00EUR", (Decimal('0.00'), 'EUR')),
     ]
 
-    mp = MoneyParserComplex()
+    mp = ComplexMoneyParser()
 
     for test_input, expected_output in test_cases:
         result = mp.parse(test_input)
@@ -50,7 +50,7 @@ def test_non_zero_decimals():
         ("123,31", (Decimal('123.31'), no_currency_value)),
     ]
 
-    mp = MoneyParserComplex()
+    mp = ComplexMoneyParser()
 
     for test_input, expected_output in test_cases:
         result = mp.parse(test_input)
@@ -71,7 +71,7 @@ def test_money_parser():
         (".5", (Decimal('0.50'), 'SEK'))  # Adjust based on behavior
     ]
 
-    mp = MoneyParserComplex()
+    mp = ComplexMoneyParser()
 
     for test_input, expected_output in test_cases:
         result = mp.parse(test_input)

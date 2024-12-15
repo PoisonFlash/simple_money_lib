@@ -3,7 +3,8 @@ from decimal import Decimal
 import decimal
 import threading
 
-import simple_money_lib.money_parser as _mp
+# import simple_money_lib.parsers.base_parser as _mp
+from simple_money_lib.parsers import MoneyParser, SimpleMoneyParser
 from simple_money_lib.currency import Currency
 
 # Ensure correct type hints for earlier versions of Python (before 3.11)
@@ -28,6 +29,49 @@ class Money:
 
     # Global default rounding mode
     _global_default_rounding = decimal.ROUND_DOWN
+
+    # Class-level lock for thread-safe parser management
+    _global_parser_lock = threading.Lock()
+    _global_default_parser = SimpleMoneyParser()
+
+    @classmethod
+    def set_global_parser(cls, parser: MoneyParser):
+        """
+        Set the global default parser in a thread-safe manner.
+        """
+        with cls._global_parser_lock:
+            cls._global_default_parser = parser
+
+    @classmethod
+    def get_global_parser(cls) -> MoneyParser:
+        """
+        Get the current global default parser in a thread-safe manner.
+        """
+        with cls._global_parser_lock:
+            return cls._global_default_parser
+
+    @classmethod
+    def set_thread_local_parser(cls, parser: MoneyParser):
+        """
+        Set the thread-local parser for the current thread.
+        """
+        cls._thread_local.parser = parser
+
+    @classmethod
+    def get_thread_local_parser(cls) -> MoneyParser | None:
+        """
+        Get the thread-local parser for the current thread.
+        """
+        return getattr(cls._thread_local, "parser", None)
+
+    @classmethod
+    def get_parser(cls) -> MoneyParser:
+        """
+        Determine the active parser:
+        1. Use the thread-local parser if set.
+        2. Otherwise, use the global default parser.
+        """
+        return cls.get_thread_local_parser() or cls.get_global_parser()
 
     @classmethod
     def get_rounding(cls):
@@ -116,8 +160,8 @@ class Money:
 
             # Case: Single string positional argument (e.g., "100 USD")
             case (money_string, ), {} if isinstance(money_string, str):
-                # TODO: Implement switchable parsers
-                parsed_amount, parsed_currency = _mp.MoneyParserComplex().parse(money_string)
+                parser = self.get_parser()
+                parsed_amount, parsed_currency = parser.parse(money_string)
                 self.currency = Currency(parsed_currency) if parsed_currency else self._get_default_currency()
                 self.amount = self._validate_amount(parsed_amount)
 
@@ -395,7 +439,8 @@ class Money:
         """
         return self.as_dict()[key]
 
-    def keys(self):
+    @staticmethod
+    def keys():
         """
         Return a list of keys representing the components of the Money object.
         Keys: ['amount', 'currency']
