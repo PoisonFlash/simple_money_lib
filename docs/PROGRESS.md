@@ -1,11 +1,13 @@
 ## Features
-- [ ] Implement abstract parser logic
-- [ ] Implement simple default parser
+- [x] Implement abstract parser logic
+- [x] Implement simple default parser
+- [ ] Reintegrate ComplexParser
 
 ## TODOs:
 * Implement contexts
 * Implement get_default_currency from context
 * Add documentation to Money class
+* Add parsers documentation
 
 ## Completed Tasks
 

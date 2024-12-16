@@ -1,0 +1,12 @@
+{
+    "BTC": {
+        "numeric": 1000,
+        "sub_unit": 8,
+        "name": "Bitcoin"
+    },
+    "ETH": {
+        "numeric": null,
+        "sub_unit": 18,
+        "name": "Ethereum"
+    }
+}
