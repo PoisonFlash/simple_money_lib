@@ -3,18 +3,23 @@ from decimal import Decimal
 import decimal
 import threading
 
+# Ensure correct type hints for earlier versions of Python (before 3.11)
+# Consider switching to Self (from typing import Self) in October 2026
+M = TypeVar("M", bound="Money")
+
 # import simple_money_lib.parsers.base_parser as _mp
 from simple_money_lib.parsers import MoneyParser, SimpleMoneyParser
 from simple_money_lib.currency import Currency
 
-# Ensure correct type hints for earlier versions of Python (before 3.11)
-# Consider switching to Self (from typing import Self) in October 2026
-M = TypeVar("M", bound="Money")
+# Global state
+from simple_money_lib.utils.rounding import RoundingManager as _RoundingManager
 
 # Constants
 _NUMERIC_TYPES = (int, float, Decimal)  # Permitted numeric types for operations
 
 class Money:
+
+    rounding = _RoundingManager()
 
     # Class constants
     _ERR_MSG_ADD_SUB = "Cannot add or subtract Money objects with different currencies"
@@ -26,9 +31,6 @@ class Money:
     # Class-level lock for thread-safe global changes
     _global_lock = threading.Lock()
     _thread_local = threading.local()
-
-    # Global default rounding mode
-    _global_default_rounding = decimal.ROUND_DOWN
 
     # Class-level lock for thread-safe parser management
     _global_parser_lock = threading.Lock()
@@ -72,50 +74,6 @@ class Money:
         2. Otherwise, use the global default parser.
         """
         return cls.get_thread_local_parser() or cls.get_global_parser()
-
-    @classmethod
-    def get_rounding(cls):
-        """
-        Get the rounding mode. Check thread-local first; fallback to global default.
-        """
-        return getattr(cls._thread_local, "rounding", cls._global_default_rounding)
-
-    @classmethod
-    def set_rounding(cls, rounding=None):
-        """
-        Set the thread-local rounding mode.
-        Parameters:
-            rounding: A valid rounding mode from the decimal module (e.g., decimal.ROUND_HALF_UP).
-        """
-        if rounding is None:
-            rounding = cls.get_global_rounding()
-        cls._thread_local.rounding = rounding
-
-    @classmethod
-    def reset_rounding(cls):
-        """
-        Reset the thread-local rounding mode to use the global default.
-        """
-        if hasattr(cls._thread_local, "rounding"):
-            del cls._thread_local.rounding
-
-    @classmethod
-    def set_global_rounding(cls, rounding):
-        """
-        Set the global default rounding mode in a thread-safe manner.
-        Parameters:
-            rounding: A valid rounding mode from the decimal module (e.g., ROUND_HALF_UP).
-        """
-        with cls._global_lock:
-            cls._global_default_rounding = rounding
-
-    @classmethod
-    def get_global_rounding(cls):
-        """
-        Get the current global default rounding mode.
-        """
-        with cls._global_lock:
-            return cls._global_default_rounding
 
     @overload
     def __init__(self, money_string: str) -> None:
@@ -193,16 +151,13 @@ class Money:
             raise TypeError("'currency' must be a Currency instance or a valid currency code string")
 
     def _validate_amount(self, amount: Decimal | int | float | str) -> Decimal:
-        """Ensure that amount is a valid Decimal and formatted with right number of decimal points"""
-        if isinstance(amount, Decimal):
-            pass
-        elif isinstance(amount, (int, float, str)):
-            try:
+        """Ensure amount is a valid Decimal and format it based on currency subunits."""
+        try:
+            # Convert all acceptable types to Decimal directly
+            if not isinstance(amount, Decimal):
                 amount = Decimal(str(amount))
-            except (decimal.InvalidOperation, ValueError, TypeError):
-                raise ValueError(f"Invalid amount: {amount}")
-        else:
-            raise TypeError("'amount' must be a Decimal, int, float, or str representing a valid numeric value.")
+        except (decimal.InvalidOperation, ValueError, TypeError):
+            raise ValueError("'amount' must be a Decimal, int, float, or str representing a valid numeric value.")
 
         return self._quantize_amount(amount)
 
@@ -213,7 +168,7 @@ class Money:
         """Quantize (ensure number of decimal digits) the amount respecting currency subunits and rounding rules"""
         return amount.quantize(
             Decimal("0." + "0" * self._get_currency_subunit()),
-            rounding=Money.get_rounding()
+            rounding=Money.rounding.get()
         )
 
     @staticmethod
@@ -388,7 +343,7 @@ class Money:
         target_precision = Decimal("1").scaleb(-number_of_decimal_digits)
 
         # Apply quantization with the current rounding rule
-        amount = self.amount.quantize(target_precision, rounding=self.get_rounding())
+        amount = self.amount.quantize(target_precision, rounding=Money.rounding.get())
 
         # Return a new Money object with the rounded amount
         return self.__class__(amount=amount, currency=self.currency)

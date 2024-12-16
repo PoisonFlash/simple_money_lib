@@ -9,7 +9,12 @@
 * Add documentation to Money class
 * Add parsers documentation
 
-## Completed Tasks
+## Consider
+* operations like __add__ return NotImplemented for mismatched currencies rather than raising a TypeError
+* The code assumes either a global or thread-local parser is always available. Should there be a fallback mechanism or error for missing parsers?
+* Some method comments could be expanded for clarity, particularly in arithmetic and comparison operations.
+* Custom exceptions (e.g., InvalidAmountError, InvalidCurrencyError) could improve clarity over generic exceptions like TypeError or ValueError.
+* If the parser's role grows, you might consider isolating parsing logic into a dedicated utility or class for extensibility.
 
 
 ## Notes

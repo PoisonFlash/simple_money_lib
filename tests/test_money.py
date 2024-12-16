@@ -17,13 +17,13 @@ import simple_money_lib.parsers as parsers
 @pytest.fixture(autouse=True)
 def reset_global_rounding():
     # Save the original rounding mode
-    original_rounding = Money.get_global_rounding()
+    original_rounding = Money.rounding.get_default()
 
     # Yield control to the test
     yield
 
     # Reset the global rounding mode after each test
-    Money.set_global_rounding(original_rounding)
+    Money.rounding.set_default(original_rounding)
 
 @pytest.fixture(autouse=True)
 def mock_save_user_currencies():
@@ -75,7 +75,7 @@ def test_money_invalid_currency_type():
         Money(10, currency=123)  # Invalid type for currency
 
 def test_money_invalid_amount_type():
-    with pytest.raises(TypeError,
+    with pytest.raises(ValueError,
                        match="'amount' must be a Decimal, int, float, or str representing a valid numeric value."):
         Money(object(), 'USD')  # Invalid type for amount
 
@@ -301,11 +301,11 @@ def test_truediv_with_valid_numeric_types():
     assert result == Money(8, usd)
 
     # Division with Decimal
-    Money.set_rounding(decimal.ROUND_HALF_DOWN)
+    Money.rounding.set(decimal.ROUND_HALF_DOWN)
     result = money / Decimal("3")
     assert result == Money(6.67, usd)
 
-    Money.set_rounding(decimal.ROUND_DOWN)
+    Money.rounding.set(decimal.ROUND_DOWN)
     result = money / Decimal("3")
     assert result == Money(6.66, usd)
 
@@ -332,7 +332,7 @@ def test_truediv_with_invalid_types():
 
 
 def test_divide_with_adjustment():
-    Money.set_rounding(decimal.ROUND_DOWN)
+    Money.rounding.set(decimal.ROUND_DOWN)
     usd = Currency("USD")
     money = Money(20, usd)
 
@@ -350,7 +350,7 @@ def test_divide_with_adjustment():
     assert adjustment == Money(0, usd)
 
 def test_divide_with_adjustment_half_down():
-    Money.set_rounding(decimal.ROUND_HALF_DOWN)
+    Money.rounding.set(decimal.ROUND_HALF_DOWN)
     usd = Currency("USD")
     money = Money(20, usd)
 
@@ -366,7 +366,7 @@ def test_divide_with_adjustment_half_down():
     result, adjustment = money.divide_with_adjustment(4)
     assert result == Money(5, usd)
     assert adjustment == Money(0, usd)
-    Money.set_rounding(decimal.ROUND_DOWN)
+    Money.rounding.set(decimal.ROUND_DOWN)
 
 def test_rtruediv_unsupported():
     usd = Currency("USD")
@@ -377,12 +377,12 @@ def test_rtruediv_unsupported():
         10 / money
 
 def test_rounding_single_thread():
-    Money.set_rounding(decimal.ROUND_HALF_UP)
+    Money.rounding.set(decimal.ROUND_HALF_UP)
     money = Money(10.25, "USD")
     result = money / 3
     assert str(result) == "3.42 USD"
 
-    Money.set_rounding(decimal.ROUND_DOWN)
+    Money.rounding.set(decimal.ROUND_DOWN)
     result = money / 3
     assert str(result) == "3.41 USD"
 
@@ -390,7 +390,7 @@ def test_rounding_multi_thread():
     results = {}
 
     def thread_func(thread_id, rounding_mode):
-        Money.set_rounding(rounding_mode)
+        Money.rounding.set(rounding_mode)
         money = Money(10.25, "USD")
         results[thread_id] = str(money / 3)
 
@@ -510,48 +510,48 @@ from decimal import ROUND_HALF_UP, ROUND_HALF_DOWN, ROUND_FLOOR, ROUND_CEILING
 
 def test_set_rounding_explicit_value():
     # Explicitly set thread-local rounding
-    Money.set_rounding(ROUND_HALF_DOWN)
-    assert Money.get_rounding() == ROUND_HALF_DOWN
+    Money.rounding.set(ROUND_HALF_DOWN)
+    assert Money.rounding.get() == ROUND_HALF_DOWN
 
 def test_set_rounding_defaults_to_global():
     # Set global default rounding
-    Money.set_global_rounding(ROUND_CEILING)
+    Money.rounding.set_default(ROUND_CEILING)
 
     # Set thread-local rounding to use the global default
-    Money.set_rounding()
-    assert Money.get_rounding() == ROUND_CEILING
+    Money.rounding.set()
+    assert Money.rounding.get() == ROUND_CEILING
 
 def test_set_global_rounding_changes_default():
     # Set a new global default
-    Money.set_global_rounding(ROUND_FLOOR)
+    Money.rounding.set_default(ROUND_FLOOR)
 
     # Reset thread-local rounding to use the global default
-    Money.reset_rounding()
-    assert Money.get_rounding() == ROUND_FLOOR
+    Money.rounding.reset()
+    assert Money.rounding.get() == ROUND_FLOOR
 
 def test_reset_rounding_uses_global_default():
     # Set global rounding to ROUND_HALF_UP
-    Money.set_global_rounding(ROUND_HALF_UP)
+    Money.rounding.set_default(ROUND_HALF_UP)
 
     # Override thread-local rounding
-    Money.set_rounding(ROUND_FLOOR)
-    assert Money.get_rounding() == ROUND_FLOOR
+    Money.rounding.set(ROUND_FLOOR)
+    assert Money.rounding.get() == ROUND_FLOOR
 
     # Reset to use global default
-    Money.reset_rounding()
-    assert Money.get_rounding() == ROUND_HALF_UP
+    Money.rounding.reset()
+    assert Money.rounding.get() == ROUND_HALF_UP
 
 def test_thread_local_rounding_is_independent():
     # Set global rounding to ROUND_HALF_DOWN
-    Money.set_global_rounding(ROUND_HALF_DOWN)
+    Money.rounding.set_default(ROUND_HALF_DOWN)
 
     # Thread 1: Set ROUND_CEILING
-    Money.set_rounding(ROUND_CEILING)
-    assert Money.get_rounding() == ROUND_CEILING
+    Money.rounding.set(ROUND_CEILING)
+    assert Money.rounding.get() == ROUND_CEILING
 
     # Reset and ensure global default applies
-    Money.reset_rounding()
-    assert Money.get_rounding() == ROUND_HALF_DOWN
+    Money.rounding.reset()
+    assert Money.rounding.get() == ROUND_HALF_DOWN
 
 def test_round_to_fewer_decimals():
     usd = Currency("USD")
@@ -578,7 +578,7 @@ def test_round_to_zero_decimals():
     assert result == Money("2", usd)
 
 def test_round_respects_default_rounding():
-    Money.set_global_rounding(ROUND_HALF_UP)
+    Money.rounding.set_default(ROUND_HALF_UP)
     usd = Currency("USD")
     amount = Money("2.359", usd)
 
