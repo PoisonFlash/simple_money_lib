@@ -15,6 +15,7 @@
 * Some method comments could be expanded for clarity, particularly in arithmetic and comparison operations.
 * Custom exceptions (e.g., InvalidAmountError, InvalidCurrencyError) could improve clarity over generic exceptions like TypeError or ValueError.
 * If the parser's role grows, you might consider isolating parsing logic into a dedicated utility or class for extensibility.
+* Replace rounding logic with 'with' type logic, instead of thread based
 
 
 ## Notes
