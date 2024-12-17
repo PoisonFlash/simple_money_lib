@@ -1,25 +1,19 @@
 from typing import overload, TypeVar
 from decimal import Decimal
 import decimal
-import threading
 
 # Ensure correct type hints for earlier versions of Python (before 3.11)
 # Consider switching to Self (from typing import Self) in October 2026
 M = TypeVar("M", bound="Money")
 
-# import simple_money_lib.parsers.base_parser as _mp
-from simple_money_lib.parsers import MoneyParser, SimpleMoneyParser
 from simple_money_lib.currency import Currency
-
-# Global state
+from simple_money_lib.parsers import ParserManager as _ParserManager
 from simple_money_lib.utils.rounding import RoundingManager as _RoundingManager
 
 # Constants
 _NUMERIC_TYPES = (int, float, Decimal)  # Permitted numeric types for operations
 
 class Money:
-
-    rounding = _RoundingManager()
 
     # Class constants
     _ERR_MSG_ADD_SUB = "Cannot add or subtract Money objects with different currencies"
@@ -28,52 +22,9 @@ class Money:
     _ERR_MSG_EXPN = "Exponentiation is not supported for Money objects."
     _ERR_MSG_COMP = "Cannot compare Money objects with different currencies."
 
-    # Class-level lock for thread-safe global changes
-    _global_lock = threading.Lock()
-    _thread_local = threading.local()
-
-    # Class-level lock for thread-safe parser management
-    _global_parser_lock = threading.Lock()
-    _global_default_parser = SimpleMoneyParser()
-
-    @classmethod
-    def set_global_parser(cls, parser: MoneyParser):
-        """
-        Set the global default parser in a thread-safe manner.
-        """
-        with cls._global_parser_lock:
-            cls._global_default_parser = parser
-
-    @classmethod
-    def get_global_parser(cls) -> MoneyParser:
-        """
-        Get the current global default parser in a thread-safe manner.
-        """
-        with cls._global_parser_lock:
-            return cls._global_default_parser
-
-    @classmethod
-    def set_thread_local_parser(cls, parser: MoneyParser):
-        """
-        Set the thread-local parser for the current thread.
-        """
-        cls._thread_local.parser = parser
-
-    @classmethod
-    def get_thread_local_parser(cls) -> MoneyParser | None:
-        """
-        Get the thread-local parser for the current thread.
-        """
-        return getattr(cls._thread_local, "parser", None)
-
-    @classmethod
-    def get_parser(cls) -> MoneyParser:
-        """
-        Determine the active parser:
-        1. Use the thread-local parser if set.
-        2. Otherwise, use the global default parser.
-        """
-        return cls.get_thread_local_parser() or cls.get_global_parser()
+    # Class variables for additional functionality
+    rounding = _RoundingManager()
+    parser = _ParserManager()
 
     @overload
     def __init__(self, money_string: str) -> None:
@@ -118,7 +69,7 @@ class Money:
 
             # Case: Single string positional argument (e.g., "100 USD")
             case (money_string, ), {} if isinstance(money_string, str):
-                parser = self.get_parser()
+                parser = self.parser.get()
                 parsed_amount, parsed_currency = parser.parse(money_string)
                 self.currency = Currency(parsed_currency) if parsed_currency else self._get_default_currency()
                 self.amount = self._validate_amount(parsed_amount)

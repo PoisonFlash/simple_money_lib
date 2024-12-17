@@ -3,14 +3,14 @@ from unittest.mock import patch
 
 from decimal import Decimal
 from simple_money_lib import Currency
-from simple_money_lib.parsers import SimpleMoneyParser, SimpleParserWithSubstitutions
+from simple_money_lib.parsers import BaseParser, SimpleParserWithSubstitutions
 
 
 # Fixture to initialize the MoneyParserBase instance
 @pytest.fixture
 def parser():
     """Fixture to initialize the MoneyParserBase instance."""
-    return SimpleMoneyParser()
+    return BaseParser()
 
 # Auto-use fixture to mock save_user_currencies and prevent disk writes
 @pytest.fixture(autouse=True)
@@ -46,6 +46,10 @@ def test_empty_string(parser):
 def test_negative_amount_with_currency(parser):
     result = parser.parse("-42.00 GBP")
     assert result == (Decimal("-42.00"), "GBP")
+
+def test_unknown_currency_symbol(parser):
+    with pytest.raises(ValueError):
+        parser.parse("£100")
 
 def test_amount_with_currency_ending_with_digit(parser):
     # Register a custom currency for the test
@@ -139,6 +143,22 @@ def test_substitution_with_symbols():
     for test_input, expected_output in test_cases:
         result = parser.parse(test_input)
         assert result == expected_output, f"Failed on '{test_input}'"
+
+def test_substitution_with_unknown_symbol():
+    substitutions = {"$": "USD"}
+    parser = SimpleParserWithSubstitutions(substitutions=substitutions)
+
+    test_cases = [
+        ("£1250.50", ValueError),  # GBP symbol '£' is unknown
+        ("1250.50£", ValueError),
+        ("£ 1250.50", ValueError),
+        ("1250.50 £", ValueError),
+        # ("1250.50 $", ValueError)  # This would not raise ValueError
+    ]
+
+    for test_input, expected_output in test_cases:
+        with pytest.raises(expected_output):
+            parser.parse(test_input)
 
 def test_bad_substitution():
     substitutions = {"$": "USD", ",": ".", "₿": "ZZZZZ"}

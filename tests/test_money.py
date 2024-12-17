@@ -686,24 +686,24 @@ def test_items():
 class TestMoneyParsers:
     def setup_method(self):
         """Reset parser settings before each test."""
-        Money.set_global_parser(parsers.SimpleMoneyParser())
-        Money.set_thread_local_parser(None)
+        Money.parser.set_default(parsers.BaseParser())
+        Money.parser.set(None)
 
     def test_global_parser(self):
         """Verify the global parser is used when no thread-local parser is set."""
         parser = parsers.SimpleParserWithSubstitutions({"$": "USD", ",": ""})
-        Money.set_global_parser(parser)
+        Money.parser.set_default(parser)
 
         money = Money("1,000.50$")
         assert str(money) == "1000.50 USD"
 
     def test_thread_local_parser(self):
         """Verify the thread-local parser overrides the global parser."""
-        global_parser = parsers.SimpleMoneyParser()
+        global_parser = parsers.BaseParser()
         thread_local_parser = parsers.SimpleParserWithSubstitutions({"€": "EUR"})
 
-        Money.set_global_parser(global_parser)
-        Money.set_thread_local_parser(thread_local_parser)
+        Money.parser.set_default(global_parser)
+        Money.parser.set(thread_local_parser)
 
         money = Money("€123.45")
         assert str(money) == "123.45 EUR"
@@ -711,9 +711,9 @@ class TestMoneyParsers:
     def test_thread_local_parser_does_not_affect_global(self):
         """Verify thread-local parser settings do not change global behavior."""
         global_parser = parsers.SimpleParserWithSubstitutions({"$": "USD"})
-        Money.set_global_parser(global_parser)
+        Money.parser.set_default(global_parser)
 
-        Money.set_thread_local_parser(parsers.SimpleParserWithSubstitutions({"€": "EUR"}))
+        Money.parser.set(parsers.SimpleParserWithSubstitutions({"€": "EUR"}))
 
         # Thread-local parser is ignored outside the current thread
         money = Money("€123.45")
@@ -721,15 +721,24 @@ class TestMoneyParsers:
 
     def test_parser_thread_safety(self):
         """Test that parsers are thread-safe and do not interfere across threads."""
+        exceptions = []
         def thread1_task():
-            Money.set_thread_local_parser(parsers.SimpleParserWithSubstitutions({"$": "USD"}))
-            money = Money("$50")
-            assert str(money) == "50.00 USD"
+            try:
+                Money.parser.set(parsers.SimpleParserWithSubstitutions({"$": "USD"}))
+                money = Money("$50")
+                assert str(money) == "50.00 USD"  # Pass
+                Money("€50")  # Fail
+            except Exception as e:
+                exceptions.append(e)
 
         def thread2_task():
-            Money.set_thread_local_parser(parsers.SimpleParserWithSubstitutions({"€": "EUR"}))
-            money = Money("€50")
-            assert str(money) == "50.00 EUR"
+            try:
+                Money.parser.set(parsers.SimpleParserWithSubstitutions({"€": "EUR"}))
+                money = Money("€50")
+                assert str(money) == "50.00 EUR"  # Pass
+                Money("$100")  # Fail
+            except Exception as e:
+                exceptions.append(e)
 
         thread1 = threading.Thread(target=thread1_task)
         thread2 = threading.Thread(target=thread2_task)
@@ -739,13 +748,19 @@ class TestMoneyParsers:
         thread1.join()
         thread2.join()
 
+        assert len(exceptions) == 2
+        with pytest.raises(ValueError):
+            raise exceptions[0]
+        with pytest.raises(ValueError):
+            raise exceptions[1]
+
     def test_reset_thread_local_parser(self):
         """Test resetting thread-local parser restores global parser."""
         global_parser = parsers.SimpleParserWithSubstitutions({"$": "USD"})
-        Money.set_global_parser(global_parser)
+        Money.parser.set_default(global_parser)
 
-        Money.set_thread_local_parser(parsers.SimpleParserWithSubstitutions({"€": "EUR"}))
-        Money.set_thread_local_parser(None)
+        Money.parser.set(parsers.SimpleParserWithSubstitutions({"€": "EUR"}))
+        Money.parser.set(None)
 
         money = Money("$123.45")
         assert str(money) == "123.45 USD"  # Global parser is now used

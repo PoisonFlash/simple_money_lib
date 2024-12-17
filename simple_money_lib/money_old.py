@@ -1,6 +1,6 @@
 from moneyed import Money as _BaseMoney
 
-import simple_money_lib.parsers.base_parser as _mp
+# import simple_money_lib.parsers.base_parser as _mp
 import simple_money_lib.parsers.complex_parser
 
 

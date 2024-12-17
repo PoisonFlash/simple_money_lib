@@ -3,7 +3,7 @@ from typing import Dict
 import threading
 
 from simple_money_lib.errors import CurrencyNotFoundError, CurrencyExistsError, CurrencyCodeInvalid
-from simple_money_lib.currency_serialize import load_currencies, save_user_currencies
+from simple_money_lib.utils.currency_serialize import load_currencies, save_user_currencies
 
 _predefined_currencies, _user_defined_currencies = load_currencies()
 

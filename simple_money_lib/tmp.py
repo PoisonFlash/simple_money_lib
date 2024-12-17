@@ -8,11 +8,11 @@
 # for item in Currency.all_currencies():
 #     print(item)
 
-from simple_money_lib.parsers.simple_parser import SimpleMoneyParser
+from simple_money_lib.parsers.base_parser import BaseParser
 
-mp = SimpleMoneyParser()
+mp = BaseParser()
 res = []
-cases = ["100 BTC_8", "BTC_8 100", "BTC_8100"]
+cases = ["€50"]
 for case in cases:
     res.append(mp.parse(case))
 

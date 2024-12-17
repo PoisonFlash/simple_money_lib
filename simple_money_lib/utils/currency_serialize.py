@@ -4,7 +4,7 @@ from pathlib import Path
 
 from simple_money_lib.errors import CurrencySerializationError
 
-_DATA_DIR = Path(__file__).parent / "data"
+_DATA_DIR = Path(__file__).parent.parent / "data"
 _PREDEFINED_FILE = _DATA_DIR / "predefined_currencies.json"
 _USER_FILE = _DATA_DIR / "user_currencies.json"
 
