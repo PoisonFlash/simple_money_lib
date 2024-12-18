@@ -9,6 +9,7 @@ M = TypeVar("M", bound="Money")
 from simple_money_lib.currency import Currency
 from simple_money_lib.parsers import ParserManager as _ParserManager
 from simple_money_lib.utils.rounding import RoundingManager as _RoundingManager
+from simple_money_lib.utils.default_currency import DefaultCurrency as _DefaultCurrency
 
 # Constants
 _NUMERIC_TYPES = (int, float, Decimal)  # Permitted numeric types for operations
@@ -25,6 +26,7 @@ class Money:
     # Class variables for additional functionality
     rounding = _RoundingManager()
     parser = _ParserManager()
+    default_currency = _DefaultCurrency()
 
     @overload
     def __init__(self, money_string: str) -> None:
@@ -57,7 +59,7 @@ class Money:
 
             # Case: Named amount only, with default currency
             case (), {"amount": amount}:
-                self.currency = self._get_default_currency()
+                self.currency = self.default_currency.get()
                 self.amount = self._validate_amount(amount)
                 kwargs.pop("amount", None)
 
@@ -71,12 +73,12 @@ class Money:
             case (money_string, ), {} if isinstance(money_string, str):
                 parser = self.parser.get()
                 parsed_amount, parsed_currency = parser.parse(money_string)
-                self.currency = Currency(parsed_currency) if parsed_currency else self._get_default_currency()
+                self.currency = Currency(parsed_currency) if parsed_currency else self.default_currency.get()
                 self.amount = self._validate_amount(parsed_amount)
 
             # Case: Positional amount only, with default currency
             case (amount, ), {}:
-                self.currency = self._get_default_currency()
+                self.currency = self.default_currency.get()
                 self.amount = self._validate_amount(amount)
 
             # Error: Too many positional arguments
@@ -121,11 +123,6 @@ class Money:
             Decimal("0." + "0" * self._get_currency_subunit()),
             rounding=Money.rounding.get()
         )
-
-    @staticmethod
-    def _get_default_currency():
-        # TODO: Enable contexts
-        return Currency('XXX')
 
     def __str__(self):
         return f"{self.amount:.{self._get_currency_subunit()}f} {self.currency}"

@@ -9,9 +9,9 @@ import threading
 from decimal import Decimal
 from simple_money_lib.money import Money
 from simple_money_lib.currency import Currency
-from simple_money_lib.currencies.all import EUR
+from simple_money_lib.currencies.all import XXX, EUR
 import simple_money_lib.parsers as parsers
-
+from simple_money_lib.utils.default_currency import DefaultCurrency
 
 
 @pytest.fixture(autouse=True)
@@ -764,3 +764,92 @@ class TestMoneyParsers:
 
         money = Money("$123.45")
         assert str(money) == "123.45 USD"  # Global parser is now used
+
+class TestDefaultCurrencyStandalone:
+    def setup_method(self):
+        """Reset the default currency before each test."""
+        DefaultCurrency.set(XXX)
+
+    def test_default_currency_initial(self):
+        """Verify the initial default currency is 'XXX'."""
+        assert DefaultCurrency.get().code == "XXX"
+
+    def test_set_default_currency(self):
+        """Test setting the default currency."""
+        DefaultCurrency.set("USD")
+        assert DefaultCurrency.get().code == "USD"
+
+    def test_set_default_currency_with_currency_object(self):
+        """Test setting the default currency using a Currency object."""
+        DefaultCurrency.set(Currency("EUR"))
+        assert DefaultCurrency.get().code == "EUR"
+
+    def test_thread_safety(self):
+        """Test that default currency changes are thread-safe."""
+        def set_currency_in_thread(code):
+            DefaultCurrency.set(code)
+            assert DefaultCurrency.get().code == code
+
+        thread1 = threading.Thread(target=set_currency_in_thread, args=("RUR",))
+        thread2 = threading.Thread(target=set_currency_in_thread, args=("KES",))
+
+        thread1.start()
+        thread2.start()
+        thread1.join()
+        thread2.join()
+
+        # After threads, check the last set currency
+        final_currency = DefaultCurrency.get()
+        assert final_currency.code in ("RUR", "KES")  # Either thread's update is valid
+
+    def test_reset_default_currency(self):
+        """Verify resetting to 'XXX' works."""
+        DefaultCurrency.set("USD")
+        assert DefaultCurrency.get().code == "USD"
+
+        DefaultCurrency.set(XXX)
+        assert DefaultCurrency.get() is XXX
+
+
+class TestMoneyDefaultCurrency:
+    def setup_method(self):
+        """Reset the global default currency to 'XXX' before each test."""
+        Money.default_currency.set(XXX)
+
+    def test_default_currency_applied(self):
+        """Test that the default currency is applied when no currency is specified."""
+        money = Money(100)  # No currency specified
+        assert money.currency.code == "XXX"
+        assert money.amount == 100
+
+    def test_set_default_currency_globally(self):
+        """Test that changing the global default currency affects new Money instances."""
+        Money.default_currency.set("USD")
+        money = Money(200)  # No currency specified
+        assert money.currency.code == "USD"
+        assert money.amount == 200
+
+    def test_default_currency_with_currency_specified(self):
+        """Test that specifying a currency overrides the default currency."""
+        Money.default_currency.set("USD")
+        money = Money(300, "EUR")
+        assert money.currency.code == "EUR"
+        assert money.amount == 300
+
+    def test_thread_safety_of_default_currency(self):
+        """Test that changes to the default currency are thread-safe."""
+        def set_default_currency_in_thread(code):
+            Money.default_currency.set(code)
+            assert Money.default_currency.get().code == code
+
+        thread1 = threading.Thread(target=set_default_currency_in_thread, args=("USD",))
+        thread2 = threading.Thread(target=set_default_currency_in_thread, args=("EUR",))
+
+        thread1.start()
+        thread2.start()
+        thread1.join()
+        thread2.join()
+
+        # Check final state
+        final_currency = Money.default_currency.get()
+        assert final_currency.code in ("USD", "EUR")  # Either thread's update is valid

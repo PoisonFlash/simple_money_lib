@@ -90,13 +90,14 @@ def test_register_non_strict_mode():
 def test_thread_safety():
     """Test thread safety of register."""
     results = []
+    exceptions = []
     Currency.strict_mode = False
     def register_btc():
         try:
             btc = Currency.register("BTC", numeric=1000, sub_unit=8, name="Bitcoin")
             results.append(btc)
         except Exception as e:
-            results.append(e)
+            exceptions.append(e)
 
     threads = [threading.Thread(target=register_btc) for _ in range(50)]
     for thread in threads:
@@ -105,6 +106,7 @@ def test_thread_safety():
         thread.join()
 
     # All threads should return the same instance
+    assert len(exceptions) == 0
     assert len(results) == 50
     assert all(r is results[0] for r in results)
 
