@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from simple_money_lib.currency_context import CurrencyContext
+from _inactive.currency_context import CurrencyContext
 
 
 class BaseCurrencyContext(ABC):

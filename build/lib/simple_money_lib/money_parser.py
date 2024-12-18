@@ -2,7 +2,7 @@ import re
 from typing import Tuple
 from decimal import Decimal
 
-from simple_money_lib.currency_context import CurrencyContext
+from _inactive.currency_context import CurrencyContext
 
 
 class MoneyParser:
@@ -135,7 +135,8 @@ if __name__ == '__main__':
                    "abc123", "@@@500", "1.2.3", "1.250.50 kr", None,
                    "1 000,111.33kr", "10000d0"]
 
-    from context_templates import DefaultCurrencyContext, DanishCurrencyContext
+    from context_templates import DefaultCurrencyContext
+
     DefaultCurrencyContext.activate()
     # DanishCurrencyContext.activate()
     mp = MoneyParser()

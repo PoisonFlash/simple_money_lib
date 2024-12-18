@@ -3,7 +3,7 @@ import pytest
 from decimal import Decimal
 
 from simple_money_lib.parsers.complex_parser import ComplexMoneyParser
-from simple_money_lib.context_templates import *
+from _inactive.context_templates import *
 
 
 no_currency_value: str = 'SEK'
