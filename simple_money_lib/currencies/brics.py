@@ -1,5 +1,5 @@
 # Auto-generated module
-# CHECKLINE 2024-12-02 17:51:40
+# CHECKLINE 2024-12-20 12:16:22
 
 from simple_money_lib.currency import Currency as _Currency
 from simple_money_lib.currencies.currency_collections import CurrencyCollection as _CurrencyCollection

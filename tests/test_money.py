@@ -259,19 +259,19 @@ def test_multiplication_with_invalid_types():
     money = Money(10, usd)
 
     # Test multiplication with string
-    with pytest.raises(TypeError, match="Unsupported operand type\\(s\\) for \\*: 'Money' and 'str'"):
+    with pytest.raises(TypeError, match=re.escape("Unsupported operand type(s) for *: 'Money' and 'str'")):
         money * "string"
 
     # Test reverse multiplication with string
-    with pytest.raises(TypeError, match="Unsupported operand type\\(s\\) for \\*: 'Money' and 'str'"):
+    with pytest.raises(TypeError, match=re.escape("Unsupported operand type(s) for *: 'Money' and 'str'")):
         "string" * money
 
     # Test multiplication with list
-    with pytest.raises(TypeError, match="Unsupported operand type\\(s\\) for \\*: 'Money' and 'list'"):
+    with pytest.raises(TypeError, match=re.escape("Unsupported operand type(s) for *: 'Money' and 'list'")):
         money * [1, 2]
 
     # Test reverse multiplication with list
-    with pytest.raises(TypeError, match="Unsupported operand type\\(s\\) for \\*: 'Money' and 'list'"):
+    with pytest.raises(TypeError, match=re.escape("Unsupported operand type(s) for *: 'Money' and 'list'")):
         [1, 2] * money
 
 
@@ -484,11 +484,11 @@ def test_exponentiation_not_supported():
     money = Money(100, usd)
 
     # Forward exponentiation
-    with pytest.raises(TypeError, match="Exponentiation is not supported for Money objects."):
+    with pytest.raises(TypeError, match=re.escape("unsupported operand type(s) for ** or pow(): 'Money' and 'int'")):
         money ** 2
 
     # Reverse exponentiation
-    with pytest.raises(TypeError, match="Exponentiation is not supported for Money objects."):
+    with pytest.raises(TypeError, match=re.escape("unsupported operand type(s) for ** or pow(): 'int' and 'Money'")):
         2 ** money
 
 def test_abs_positive_value():

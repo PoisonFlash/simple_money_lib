@@ -168,11 +168,12 @@ class Money:
         # Currencies must be same
         if self.currency is other.currency:
             return self.__class__(amount=self.amount + other.amount, currency=self.currency)
-
-        # TODO replace: return NotImplemented
+        # return NotImplemented
         raise TypeError(self._ERR_MSG_ADD_SUB)
 
-    __radd__ = __add__
+    def __radd__(self: M, other: object) -> M:
+        """Enable right-hand addition with Money objects"""
+        return self.__add__(other)
 
     def __sub__(self: M, other: object) -> M:
         """Enable subtraction of Money objects with the same Currency, and subtraction of 0"""
@@ -182,7 +183,6 @@ class Money:
             return NotImplemented
         if self.currency is other.currency:
             return self.__class__(amount=self.amount - other.amount, currency=self.currency)
-        # TODO replace: return NotImplemented
         raise TypeError(self._ERR_MSG_ADD_SUB)
 
     def __rsub__(self: M, other: object) -> M:
@@ -198,7 +198,7 @@ class Money:
                 amount=self._quantize_amount(self.amount * Decimal(other)),
                 currency=self.currency,
             )
-        # TODO replace: return NotImplemented
+        # return NotImplemented
         raise TypeError(self._ERR_MSG_MULT.format(op="*", type=type(other).__name__))
 
     def __rmul__(self: M, other: object) -> M:
@@ -212,7 +212,6 @@ class Money:
                 amount=self._quantize_amount(self.amount / Decimal(other)),
                 currency=self.currency,
             )
-        # TODO replace: return NotImplemented
         raise TypeError(self._ERR_MSG_MULT.format(op="/", type=type(other).__name__))
 
     def divide_with_adjustment(self: M, other: object) -> tuple[M, M]:
@@ -224,7 +223,6 @@ class Money:
             result, adjustment = Money("20 USD").divide_with_adjustment(7)
             print(result, adjustment) >>> 2.85 USD, 0.05 USD
             Explanation: 2.85 * 7 => 19.95, 20.00 - 19.95 = 0.05
-        Note: Use modulo (%) for
         """
         if isinstance(other, _NUMERIC_TYPES):
             if other == 0:
@@ -235,7 +233,6 @@ class Money:
             )
             div_adj = self - div_result * other
             return div_result, div_adj
-        # TODO replace: return NotImplemented
         raise TypeError(self._ERR_MSG_MULT.format(op="/", type=type(other).__name__))
 
     def __rtruediv__(self: M, other: object) -> M:
@@ -251,11 +248,9 @@ class Money:
 
             # Return a new Money object
             return self.__class__(amount=self._quantize_amount(result_amount), currency=self.currency)
-        # TODO replace: return NotImplemented
         raise TypeError(self._ERR_MSG_MULT.format(op="//", type=type(other).__name__))
 
     def __rfloordiv__(self: M, other: object) -> M:
-        # TODO replace: return NotImplemented
         raise TypeError(self._ERR_MSG_DIV)
 
     def __mod__(self: M, other: object) -> M:
@@ -270,20 +265,16 @@ class Money:
             quantized_remainder = self._quantize_amount(remainder)
 
             return self.__class__(amount=quantized_remainder, currency=self.currency)
-        # TODO replace: return NotImplemented
         raise TypeError(self._ERR_MSG_MULT.format(op="%", type=type(other).__name__))
 
     def __rmod__(self: M, other: object) -> M:
-        # TODO replace: return NotImplemented
         raise TypeError(self._ERR_MSG_DIV)
 
     def __pow__(self: M, exponent: object) -> M:
-        # TODO replace: return NotImplemented
-        raise TypeError(self._ERR_MSG_EXPN)
+        return NotImplemented
 
     def __rpow__(self: M, base: object) -> M:
-        # TODO replace: return NotImplemented
-        raise TypeError(self._ERR_MSG_EXPN)
+         return NotImplemented
 
     def __abs__(self: M) -> M:
         return self.__class__(amount=abs(self.amount), currency=self.currency)
@@ -310,7 +301,6 @@ class Money:
         if not isinstance(other, Money):
             return NotImplemented
         if self.currency != other.currency:
-            # TODO replace: return NotImplemented
             raise TypeError(self._ERR_MSG_COMP)
         return self.amount < other.amount
 
@@ -318,7 +308,6 @@ class Money:
         if not isinstance(other, Money):
             return NotImplemented
         if self.currency != other.currency:
-            # TODO replace: return NotImplemented
             raise TypeError(self._ERR_MSG_COMP)
         return self.amount <= other.amount
 
@@ -326,7 +315,6 @@ class Money:
         if not isinstance(other, Money):
             return NotImplemented
         if self.currency != other.currency:
-            # TODO replace: return NotImplemented
             raise TypeError(self._ERR_MSG_COMP)
         return self.amount > other.amount
 
@@ -334,7 +322,6 @@ class Money:
         if not isinstance(other, Money):
             return NotImplemented
         if self.currency != other.currency:
-            # TODO replace: return NotImplemented
             raise TypeError(self._ERR_MSG_COMP)
         return self.amount >= other.amount
 
@@ -375,5 +362,3 @@ class Money:
         Check if a key is a valid component of the Money object.
         """
         return key in self.keys()
-
-

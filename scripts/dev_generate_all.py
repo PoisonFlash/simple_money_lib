@@ -5,16 +5,19 @@ import json
 TEMPLATE_ALL = """# Auto-generated module
 # CHECKLINE {when}
 
-# Includes all ISO currencies, source: https://en.wikipedia.org/wiki/ISO_4217
-
 from simple_money_lib.currency import Currency as _Currency
+from simple_money_lib.currencies.currency_collections import CurrencyCollection as _CurrencyCollection
 
 # Export individual currencies
 {currency_exports}
 
-__all__ = [
-    {currency_list}
-    ]
+{name} = _CurrencyCollection(
+    {currency_list_collection},
+    name="{name}",
+    description="Includes all ISO currencies, source: https://en.wikipedia.org/wiki/ISO_4217"
+)
+
+__all__ = [{currency_list}, 'all_iso_currencies']
 """
 
 def generate_currency_all(output_file: Path, source_json: Path) -> None:
@@ -26,6 +29,8 @@ def generate_currency_all(output_file: Path, source_json: Path) -> None:
     """
     print("Generating file with all ISO currencies...")
 
+    name = 'all_iso_currencies'
+
     with open(source_json, "r") as f:
         metadata = json.load(f)
 
@@ -35,9 +40,12 @@ def generate_currency_all(output_file: Path, source_json: Path) -> None:
     codes_per_line = 16
     chunks = [currency_codes[i:i + codes_per_line] for i in range(0, len(currency_codes), codes_per_line)]
     currency_list = ",\n    ".join([", ".join(f'"{code}"' for code in chunk) for chunk in chunks])
+    currency_list_collection = ",\n    ".join([", ".join(f'{code}' for code in chunk) for chunk in chunks])
 
     module_content = TEMPLATE_ALL.format(
+        name=name,
         currency_exports=currency_exports,
+        currency_list_collection=currency_list_collection,
         currency_list=currency_list,
         when=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     )
