@@ -17,9 +17,6 @@ _NUMERIC_TYPES = (int, float, Decimal)  # Permitted numeric types for operations
 
 class Money:
 
-    # Class constants
-    # _ERR_MSG_MULT = "Unsupported operand type(s) for {op}: 'Money' and '{type}'"
-
     # Class variables for additional functionality
     rounding = _RoundingManager()
     parser = _ParserManager()
@@ -195,7 +192,6 @@ class Money:
                 currency=self.currency,
             )
         raise MoneyInvalidOperation(operation="*", type_other=type(other).__name__)
-        # raise TypeError(self._ERR_MSG_MULT.format(op="*", type=type(other).__name__))
 
     def __rmul__(self: M, other: object) -> M:
         return self.__mul__(other)
@@ -209,7 +205,6 @@ class Money:
                 currency=self.currency,
             )
         raise MoneyInvalidOperation(operation="/", type_other=type(other).__name__)
-        # raise TypeError(self._ERR_MSG_MULT.format(op="/", type=type(other).__name__))
 
     def divide_with_adjustment(self: M, other: object) -> tuple[M, M]:
         """
@@ -231,7 +226,6 @@ class Money:
             div_adj = self - div_result * other
             return div_result, div_adj
         raise MoneyInvalidOperation(operation="/", type_other=type(other).__name__)
-        # raise TypeError(self._ERR_MSG_MULT.format(op="/", type=type(other).__name__))
 
     def __rtruediv__(self: M, other: object) -> M:
         raise MoneyDivisionIllegal
@@ -247,7 +241,6 @@ class Money:
             # Return a new Money object
             return self.__class__(amount=self._quantize_amount(result_amount), currency=self.currency)
         raise MoneyInvalidOperation(operation="//", type_other=type(other).__name__)
-        raise TypeError(self._ERR_MSG_MULT.format(op="//", type=type(other).__name__))
 
     def __rfloordiv__(self: M, other: object) -> M:
         raise MoneyDivisionIllegal
@@ -265,7 +258,6 @@ class Money:
 
             return self.__class__(amount=quantized_remainder, currency=self.currency)
         raise MoneyInvalidOperation(operation="%", type_other=type(other).__name__)
-        # raise TypeError(self._ERR_MSG_MULT.format(op="%", type=type(other).__name__))
 
     def __rmod__(self: M, other: object) -> M:
         raise MoneyDivisionIllegal
