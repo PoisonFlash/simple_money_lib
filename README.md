@@ -4,23 +4,27 @@ Thread-safe and parsing-friendly Python library for a powerful yet simple operat
 
 ## Overview
 
-`simple_money_lib` is a lightweight library designed for working with currencies and monetary values in Python. It is built with a focus on thread safety, flexibility, and ease of use, catering to both simple and advanced financial operations.
+`simple_money_lib` is a lightweight library designed for working with currencies and monetary values in Python. It is developed with a focus on thread safety, flexibility, and ease of use, catering to both simple and advanced financial operations.
 The main focus is consistent and precise representation of monetary amounts in different currencies, and ease and intuitiveness of use.
+
+`simple_money_lib` is inspired by `py-moneyed` and was originally planned to wrap around and slightly adjust its functionality. However, it has turned into a very different project, for a different type of user and addressing topics like thread-safety, parsing and ease of use. `simple_money_lib` still draws inspiration on `py-moneyed` API naming (`Money`, `Currency`), but all the code is written from scratch. 
+
+_**PoisonFlash**: The library is my final project for **CS50 2024** course, driven by inspiration to create something that outlasts my studies and will be useful for the community._
 
 ### Key Features
 
-| Feature                         | Description                                                                                                               |
-|---------------------------------|---------------------------------------------------------------------------------------------------------------------------|
+| Feature                         | Description                                                                                                                |
+|---------------------------------|----------------------------------------------------------------------------------------------------------------------------|
 | **Thread Safety**               | Thread-safe with dedicated managers for parsing and rounding, ensuring consistent behavior in multi-threaded environments. |
-| **Dynamic Currency Management** | Supports dynamic registration of currencies, with persistent metadata stored in JSON files.                               |
-| **Predefined Currencies**       | Preloaded from `predefined_currencies.json` and extendable via modular design.                                            |
-| **Currency Collections**        | Includes `CurrencyCollection` for grouping and managing multiple currencies.                                              |
-| **String Parsing**              | Robust monetary string parsing with customizable parsers that support thread-local and global configurations.             |
-| **Rounding Management**         | Configurable rounding modes with global and thread-local support for flexible operations.                                 |
-| **Custom Exceptions**           | Set of exceptions for validation and error handling                                                                       |
-| **Lightweight Design**          | Minimal runtime dependencies.                                                                                             |
-| **Modular Architecture**        | Designed for modular extensions, supporting predefined, user-defined, and future modules like cryptocurrencies.           |
-| **Python 3.10+ Compatibility**  | Leverages modern Python features, such as `typing`, `dataclasses`, and pattern matching.                                  |
+| **Dynamic Currency Management** | Supports dynamic registration of currencies, with persistent metadata stored in JSON files.                                |
+| **Predefined Currencies**       | Preloaded from `predefined_currencies.json` and extendable via modular design.                                             |
+| **Currency Collections**        | Includes `CurrencyCollection` for grouping and managing multiple currencies.                                               |
+| **String Parsing**              | Robust monetary string parsing with customizable parsers that support thread-local and global configurations.              |
+| **Rounding Management**         | Configurable rounding modes with global and thread-local support for flexible operations.                                  |
+| **Custom Exceptions**           | Set of exceptions for validation and error handling                                                                        |
+| **Lightweight Design**          | Minimal runtime dependencies.                                                                                              |
+| **Modular Architecture**        | Designed for modular extensions, supporting predefined, user-defined, and future modules like cryptocurrencies.            |
+| **Python 3.10+ Compatibility**  | Leverages modern Python features, such as `typing`, `dataclasses`, and pattern matching.                                   |
 
 ### Highlights
 - **Dynamic and Persistent Currencies**: Add new currencies dynamically and save them for future use.
@@ -44,6 +48,10 @@ The main focus is consistent and precise representation of monetary amounts in d
 - `Currency` is determined by `code` parameter. All `Currency` objects with the same `code` are pointers to the same instance. 
 - Thread safety is accomplished with usage of thread locks and local thread variables.
 
+## Licence
+Copyright (c) PoisonFlash
+> BSD-3-Clause licence
+
 ## Installation
 
 There are no external dependencies. Just clone the repository and install using pip:
@@ -58,12 +66,14 @@ pip install git+https://github.com/PoisonFlash/simple_money_lib.git
 
 ### 1. Creating Currencies
 Define or retrieve a currency using its ISO code:
+
 ```python
 from simple_money_lib.currency import Currency
-from simple_money_lib.errors import CurrencyExistsError
+from simple_money_lib.exceptions import CurrencyExistsError
 
 # Import a predefined currency
 from simple_money_lib.currencies.all import EUR, USD
+
 print(EUR)  # Output: EUR
 
 # Retrieve a predefined currency
@@ -172,6 +182,25 @@ print(money2 < money1)        # Output: True
 print(money == money1)        # Output: True
 ```
 
+> 📝 In-place operations (`+=, -=`) are not implemented as **in-place** to preserve immutability and thread safety. When performing `+=` or `-=`, a **new instance** of `Money` is created, and the variable is updated to reference this new instance. The original object remains unchanged.
+
+> 📝 `__rmod__` operation like `5 % Money("20 USD")` raises `MoneyDivisionIllegal`. In contrast with `moneyed` where: `5 % Money(20, USD)` => `Money(1, USD)`.
+
+```python
+from simple_money_lib.money import Money
+
+money1 = Money(100)
+money2 = Money(20)
+money3 = money1
+print(money1, money3)          # 100.00 XXX 100.00 XXX
+print(id(money1), id(money3))  # Output: same object
+
+money1 += money2
+
+print(money1, money3)          # 120.00 XXX 100.00 XXX
+print(id(money1), id(money3))  # Output: different objects
+```
+
 ### 4. Currency Collections
 
 Currencies are grouped into modules and collections for ease of import.
@@ -188,6 +217,8 @@ print(BRL in all_iso_currencies)  # True - note that BRL is imported from simple
 # If you want all 'standard' currencies, do the following:
 from simple_money_lib.currencies.all import *
 # This is primarily useful for readability of auto-generated modules.
+# A collection import may be more practical:
+from simple_money_lib.currencies.major import *
 ```
 
 Custom collections can be created. Custom collections are NOT persistent.
@@ -255,7 +286,7 @@ thread.join()
 ### 5.2. Customizing `Money` behaviour: default currency
 
 Default currency allows to initialize `Money` with just an amount: `Money(100)`.
-By default, currency `XXX` will be used, as defined in **ISO 4217**. Note that number of decimal points for 'XXX' and other currencies without specified sub-units will be 2.
+By default, currency `XXX` will be used, as defined in **ISO 4217**. Note that number of decimal points for 'XXX' and other currencies without specified subunits will be 2.
 Manipulating `Money.default_currency` parameter allows to customize rounding behaviour. The operations are thread-safe.
 
 Changing default currency can be especially useful when processing numeric data where currency is implied but not specified. As with the most of external data.
@@ -279,3 +310,132 @@ print(Money(100))                       # Output: 100 JPY - Note no decimal poin
 
 ### 5.3. Customizing `Money` behaviour: parsers
 
+Parsers enable `Money` class to create `Money` objects not just by specifying amount and currency separately, but also from a 'value string' with non-uniform formatting.
+Two baseline parsers are provided: `BaseParser` (default) and `SimpleParserWithSubstitutions`.
+
+`BaseParser` enables creation of Money objects from well-formatted inputs. It supports dot as decimal separator and currency specified as code before or after the amount.
+
+```python
+from simple_money_lib import Money
+from simple_money_lib.currencies.major import USD
+# Base parser is default, no import needed
+
+# No parser used - 100.00 USD in all cases
+Money(100, 'USD')
+Money(amount=100, currency='USD')
+Money(100, USD)
+Money(amount=100, currency=USD)
+
+# Legit conversions with BaseParser
+Money("100 EUR")         # 100.00 EUR
+Money("EUR100")          # 100.00 EUR
+Money("JPY 100")         # 100 JPY
+Money("20.25 USD")       # 20.25 USD - dot is interpreted as a decimal separator, like in Python
+Money("20.25USD")        # 20.25 USD
+Money("USD20.255")       # 20.25 USD - Excess decimal points quantized according to rounding mode (ROUND_DOWN assumed)
+Money("USD 20.25")       # 20.25 USD
+Money("20.25")           # 20.25 XXX
+Money("BTC5")            # 5.00000000 BTC - if BTC was registered earlier
+
+# Non-legit
+Money("1,020 USD")       # ValueError - Thousands separators are not supported
+Money("1 020")           # ValueError - Thousands separators are not supported
+Money("$100")            # ValueError - Currency symbols are not supported
+
+# Assuming we have done the following:
+# Currency.register('USD_12', sub_unit=12, numeric=840, name="USD with 12 digit precision")
+Money("USD_12 100")      # 100.000000000000 USD
+Money("100USD_12")       # 100.000000000000 USD
+Money("USD_12100")       # ValueError - if currency ends with a digit, a space is required
+
+# Currency resolution is from the longest to the shortest, therefore both USD_12 and USD will be correctly identified.
+Money("USD100")          # 100.00 USD
+```
+
+`SimpleParserWithSubstitutions` enables creation of Money objects with use of substitutions to convert strings to supported formats.
+E.g., a non-legit string like `"kr.1 000,25"` can be converted to legit `"SEK1000.25"`.
+The parser is initialized with `substitutions` parameter: `{old_value: new_value, ...}`. Resolution is from longest to shortest.
+
+```python
+from simple_money_lib.money import Money, Currency
+from simple_money_lib.parsers import SimpleParserWithSubstitutions
+
+Currency.register("BTC_12", numeric=1000, sub_unit=12, name="Bitcoin 12 digits")
+
+substitutions = {
+    'kr': 'SEK',           # Replace all cases of "kr" to "SEK"
+    'kr.': 'SEK',          # Replace all cases of "kr." to "SEK"
+    ',': '.',              # Replace comma as thousands separator to no separator ""
+    '$': 'USD',            # Replace "$" with "USD"
+    'BTC_12': 'BTC_12 ',  # Add a double space after currency ending with digit
+    ' ': ''                # Replace single space
+}
+
+for value_string in ["kr.1 000,25", "$100", "BTC_12 1 000"]:
+    try:
+        print(Money(value_string))
+    except ValueError:
+        print(f"Cannot process '{value_string}'")
+# Output:
+# Cannot process 'kr.1 000,25'
+# Cannot process '$100'
+# Cannot process 'BTC_12 1 000'
+
+parser = SimpleParserWithSubstitutions(substitutions)
+Money.parser.set_default(parser)  # Set global parser
+
+error_count = 0
+for value_string in ["kr.1 000,25", "$100", "BTC_12 1 000"]:
+    try:
+        print(Money(value_string))
+    except ValueError:
+        print(f"Cannot process '{value_string}'")
+# Output:
+# 1000.25 SEK
+# 100.00 USD
+# Cannot process 'BTC_12 1 000'
+
+# Custom currency ending with a digit in front of amount is still a problem. Let's solve.
+substitutions['BTC_12'] = ''
+parser2 = SimpleParserWithSubstitutions(substitutions)
+Money.parser.set(parser2)             # Set local parser
+Money.default_currency.set('BTC_12')  # Set default currency
+for value_string in ["kr.1 000,25", "$100", "BTC_12 1 000"]:
+    try:
+        print(Money(value_string))
+    except ValueError:
+        print(f"Cannot process '{value_string}'")
+Money.default_currency.set('XXX')     # Optionally, restore the default currency
+# Output:
+# 1000.25 SEK
+# 100.00 USD
+# 1000.000000000000 BTC_12
+```
+
+As the last example shows, `SimpleParserWithSubstitutions` can handle even difficult cases. However, if there is a need of complex multiple substitution, it might be advisable to create a custom parser for your specific needs.
+
+```python
+from simple_money_lib.parsers import BaseParser
+import decimal
+
+class MyParser(BaseParser):
+    def parse(self, money_string: str) -> tuple[decimal.Decimal, str | None]:
+        
+        # Your own parsing logic to modify money_string
+        
+        return super().parse(money_string)
+```
+
+It is of course also possible to extend `SimpleParserWithSubstitutions` instead of `BaseParser`. Look at the class code in such case to avoid conflicts.
+
+### 6. Error Handling
+
+`simple_money_lib` is using custom exceptions, available from `simple_money_lib.exceptions`.
+Except of `CurrencySerializationError` which is raised when currencies cannot be saved or loaded (check permissions), they are subclasses of `ValueError` for instance creation and `TypeError` for operations on `Money` objects.
+
+## Planned features
+
+- [ ] Creating custom persistent currency collections
+- [ ] Contexts as behaviour packages for Money
+- [ ] Take-away serialization for custom currencies
+- [ ] Non-persistent custom currency registration

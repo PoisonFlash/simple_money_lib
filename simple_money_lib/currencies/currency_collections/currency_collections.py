@@ -1,5 +1,5 @@
 from simple_money_lib.currency import Currency
-from simple_money_lib.errors import CurrencyNotFoundError
+from simple_money_lib.exceptions import CurrencyNotFoundError
 
 class CurrencyCollection:
     def __init__(self, *currencies, name=None, description=None):

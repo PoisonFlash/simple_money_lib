@@ -10,6 +10,7 @@ from decimal import Decimal
 from simple_money_lib.money import Money
 from simple_money_lib.currency import Currency
 from simple_money_lib.currencies.all import XXX, EUR
+from simple_money_lib.exceptions import CurrencyMismatch, MoneyDivisionIllegal, MoneyInvalidOperation
 import simple_money_lib.parsers as parsers
 from simple_money_lib.utils.default_currency import DefaultCurrency
 
@@ -168,10 +169,10 @@ def test_currency_mismatch():
     money_usd = Money(10, usd)
     money_eur = Money(5, eur)
 
-    with pytest.raises(TypeError, match="Cannot add or subtract Money objects with different currencies"):
+    with pytest.raises(CurrencyMismatch):
         money_usd + money_eur
 
-    with pytest.raises(TypeError, match="Cannot add or subtract Money objects with different currencies"):
+    with pytest.raises(CurrencyMismatch):
         money_usd - money_eur
 
 
@@ -259,19 +260,19 @@ def test_multiplication_with_invalid_types():
     money = Money(10, usd)
 
     # Test multiplication with string
-    with pytest.raises(TypeError, match=re.escape("Unsupported operand type(s) for *: 'Money' and 'str'")):
+    with pytest.raises(MoneyInvalidOperation, match=re.escape("Unsupported operand type(s) for *: 'Money' and 'str'")):
         money * "string"
 
     # Test reverse multiplication with string
-    with pytest.raises(TypeError, match=re.escape("Unsupported operand type(s) for *: 'Money' and 'str'")):
+    with pytest.raises(MoneyInvalidOperation, match=re.escape("Unsupported operand type(s) for *: 'Money' and 'str'")):
         "string" * money
 
     # Test multiplication with list
-    with pytest.raises(TypeError, match=re.escape("Unsupported operand type(s) for *: 'Money' and 'list'")):
+    with pytest.raises(MoneyInvalidOperation, match=re.escape("Unsupported operand type(s) for *: 'Money' and 'list'")):
         money * [1, 2]
 
     # Test reverse multiplication with list
-    with pytest.raises(TypeError, match=re.escape("Unsupported operand type(s) for *: 'Money' and 'list'")):
+    with pytest.raises(MoneyInvalidOperation, match=re.escape("Unsupported operand type(s) for *: 'Money' and 'list'")):
         [1, 2] * money
 
 
@@ -281,11 +282,11 @@ def test_multiplication_with_money_instances():
     money2 = Money(5, usd)
 
     # Test multiplication of two Money instances
-    with pytest.raises(TypeError, match=re.escape("Unsupported operand type(s) for *: 'Money' and 'Money'")):
+    with pytest.raises(MoneyInvalidOperation, match=re.escape("Unsupported operand type(s) for *: 'Money' and 'Money'")):
         money1 * money2
 
     # Test reverse multiplication of two Money instances
-    with pytest.raises(TypeError, match=re.escape("Unsupported operand type(s) for *: 'Money' and 'Money'")):
+    with pytest.raises(MoneyInvalidOperation, match=re.escape("Unsupported operand type(s) for *: 'Money' and 'Money'")):
         money2 * money1
 
 def test_truediv_with_valid_numeric_types():
@@ -324,10 +325,10 @@ def test_truediv_with_invalid_types():
     money = Money(20, usd)
 
     # Division with unsupported type
-    with pytest.raises(TypeError, match="Unsupported operand type\\(s\\) for /: 'Money' and 'str'"):
+    with pytest.raises(MoneyInvalidOperation, match="Unsupported operand type\\(s\\) for /: 'Money' and 'str'"):
         money / "string"
 
-    with pytest.raises(TypeError, match="Unsupported operand type\\(s\\) for /: 'Money' and 'list'"):
+    with pytest.raises(MoneyInvalidOperation, match="Unsupported operand type\\(s\\) for /: 'Money' and 'list'"):
         money / [1, 2]
 
 
@@ -373,7 +374,7 @@ def test_rtruediv_unsupported():
     money = Money(20, usd)
 
     # Reverse division (unsupported)
-    with pytest.raises(TypeError, match="Cannot divide by a Money instance."):
+    with pytest.raises(MoneyDivisionIllegal):
         10 / money
 
 def test_rounding_single_thread():
@@ -425,14 +426,17 @@ def test_floordiv_invalid():
     usd = Currency("USD")
     money = Money(20, usd)
 
-    with pytest.raises(TypeError, match=re.escape("Unsupported operand type(s) for //: 'Money' and 'str'")):
+    with pytest.raises(
+            MoneyInvalidOperation,
+            match=re.escape("Unsupported operand type(s) for //: 'Money' and 'str'")
+    ):
         money // "string"
 
 def test_rfloordiv_invalid():
     usd = Currency("USD")
     money = Money(20, usd)
 
-    with pytest.raises(TypeError, match="Cannot divide by a Money instance."):
+    with pytest.raises(MoneyDivisionIllegal):
         10 // money
 
 def test_modulo_with_valid_numeric_types():
@@ -464,11 +468,11 @@ def test_modulo_with_invalid_types():
     money = Money(20, usd)
 
     # Modulo with string
-    with pytest.raises(TypeError, match="Unsupported operand type\\(s\\) for %: 'Money' and 'str'"):
+    with pytest.raises(MoneyInvalidOperation, match="Unsupported operand type\\(s\\) for %: 'Money' and 'str'"):
         money % "string"
 
     # Reverse modulo with int
-    with pytest.raises(TypeError, match="Cannot divide by a Money instance."):
+    with pytest.raises(MoneyDivisionIllegal):
         6 % money
 
 def test_modulo_by_money():
@@ -476,7 +480,7 @@ def test_modulo_by_money():
     money = Money(20, usd)
 
     # Modulo by zero
-    with pytest.raises(TypeError, match="Cannot divide by a Money instance."):
+    with pytest.raises(MoneyDivisionIllegal):
         100 % money
 
 def test_exponentiation_not_supported():
@@ -606,7 +610,7 @@ def test_comparisons_invalid_currency():
     money2 = Money("10.00", eur)
 
     # Invalid comparison due to different currencies
-    with pytest.raises(TypeError, match="Cannot compare Money objects with different currencies."):
+    with pytest.raises(CurrencyMismatch):
         _ = money1 < money2
 
 def test_comparisons_invalid_type():

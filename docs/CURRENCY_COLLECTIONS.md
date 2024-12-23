@@ -62,8 +62,9 @@ for currency in collection:
 # RUB
 ```
 ### Handling Invalid Codes
+
 ```python
-from simple_money_lib.errors import CurrencyCodeInvalid
+from simple_money_lib.exceptions import CurrencyCodeInvalid
 
 # Raises CurrencyCodeInvalid because '123' is not a valid currency code
 try:
@@ -115,8 +116,9 @@ class CurrencyCollection:
 ## Exceptions
 ### CurrencyCodeInvalid
 Raised during initialization if an invalid currency code (e.g., "123", "@$#", "") is provided.
+
 ```python
-from simple_money_lib.errors import CurrencyCodeInvalid
+from simple_money_lib.exceptions import CurrencyCodeInvalid
 
 try:
     collection = CurrencyCollection("USD", "123", "EUR")

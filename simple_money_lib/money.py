@@ -7,6 +7,7 @@ import decimal
 M = TypeVar("M", bound="Money")
 
 from simple_money_lib.currency import Currency
+from simple_money_lib.exceptions import CurrencyMismatch, MoneyDivisionIllegal, MoneyInvalidOperation
 from simple_money_lib.parsers import ParserManager as _ParserManager
 from simple_money_lib.utils.rounding import RoundingManager as _RoundingManager
 from simple_money_lib.utils.default_currency import DefaultCurrency as _DefaultCurrency
@@ -17,11 +18,7 @@ _NUMERIC_TYPES = (int, float, Decimal)  # Permitted numeric types for operations
 class Money:
 
     # Class constants
-    _ERR_MSG_ADD_SUB = "Cannot add or subtract Money objects with different currencies"
-    _ERR_MSG_MULT = "Unsupported operand type(s) for {op}: 'Money' and '{type}'"
-    _ERR_MSG_DIV = "Cannot divide by a Money instance."
-    _ERR_MSG_EXPN = "Exponentiation is not supported for Money objects."
-    _ERR_MSG_COMP = "Cannot compare Money objects with different currencies."
+    # _ERR_MSG_MULT = "Unsupported operand type(s) for {op}: 'Money' and '{type}'"
 
     # Class variables for additional functionality
     rounding = _RoundingManager()
@@ -168,8 +165,7 @@ class Money:
         # Currencies must be same
         if self.currency is other.currency:
             return self.__class__(amount=self.amount + other.amount, currency=self.currency)
-        # return NotImplemented
-        raise TypeError(self._ERR_MSG_ADD_SUB)
+        raise CurrencyMismatch
 
     def __radd__(self: M, other: object) -> M:
         """Enable right-hand addition with Money objects"""
@@ -183,7 +179,7 @@ class Money:
             return NotImplemented
         if self.currency is other.currency:
             return self.__class__(amount=self.amount - other.amount, currency=self.currency)
-        raise TypeError(self._ERR_MSG_ADD_SUB)
+        raise CurrencyMismatch
 
     def __rsub__(self: M, other: object) -> M:
         """Enable negation through subtraction from zero: 0 - Money => -Money"""
@@ -198,8 +194,8 @@ class Money:
                 amount=self._quantize_amount(self.amount * Decimal(other)),
                 currency=self.currency,
             )
-        # return NotImplemented
-        raise TypeError(self._ERR_MSG_MULT.format(op="*", type=type(other).__name__))
+        raise MoneyInvalidOperation(operation="*", type_other=type(other).__name__)
+        # raise TypeError(self._ERR_MSG_MULT.format(op="*", type=type(other).__name__))
 
     def __rmul__(self: M, other: object) -> M:
         return self.__mul__(other)
@@ -212,7 +208,8 @@ class Money:
                 amount=self._quantize_amount(self.amount / Decimal(other)),
                 currency=self.currency,
             )
-        raise TypeError(self._ERR_MSG_MULT.format(op="/", type=type(other).__name__))
+        raise MoneyInvalidOperation(operation="/", type_other=type(other).__name__)
+        # raise TypeError(self._ERR_MSG_MULT.format(op="/", type=type(other).__name__))
 
     def divide_with_adjustment(self: M, other: object) -> tuple[M, M]:
         """
@@ -233,10 +230,11 @@ class Money:
             )
             div_adj = self - div_result * other
             return div_result, div_adj
-        raise TypeError(self._ERR_MSG_MULT.format(op="/", type=type(other).__name__))
+        raise MoneyInvalidOperation(operation="/", type_other=type(other).__name__)
+        # raise TypeError(self._ERR_MSG_MULT.format(op="/", type=type(other).__name__))
 
     def __rtruediv__(self: M, other: object) -> M:
-        raise TypeError(self._ERR_MSG_DIV)
+        raise MoneyDivisionIllegal
 
     def __floordiv__(self: M, other: object) -> M:
         if isinstance(other, _NUMERIC_TYPES):
@@ -248,10 +246,11 @@ class Money:
 
             # Return a new Money object
             return self.__class__(amount=self._quantize_amount(result_amount), currency=self.currency)
+        raise MoneyInvalidOperation(operation="//", type_other=type(other).__name__)
         raise TypeError(self._ERR_MSG_MULT.format(op="//", type=type(other).__name__))
 
     def __rfloordiv__(self: M, other: object) -> M:
-        raise TypeError(self._ERR_MSG_DIV)
+        raise MoneyDivisionIllegal
 
     def __mod__(self: M, other: object) -> M:
         if isinstance(other, _NUMERIC_TYPES):
@@ -265,10 +264,11 @@ class Money:
             quantized_remainder = self._quantize_amount(remainder)
 
             return self.__class__(amount=quantized_remainder, currency=self.currency)
-        raise TypeError(self._ERR_MSG_MULT.format(op="%", type=type(other).__name__))
+        raise MoneyInvalidOperation(operation="%", type_other=type(other).__name__)
+        # raise TypeError(self._ERR_MSG_MULT.format(op="%", type=type(other).__name__))
 
     def __rmod__(self: M, other: object) -> M:
-        raise TypeError(self._ERR_MSG_DIV)
+        raise MoneyDivisionIllegal
 
     def __pow__(self: M, exponent: object) -> M:
         return NotImplemented
@@ -301,28 +301,28 @@ class Money:
         if not isinstance(other, Money):
             return NotImplemented
         if self.currency != other.currency:
-            raise TypeError(self._ERR_MSG_COMP)
+            raise CurrencyMismatch
         return self.amount < other.amount
 
     def __le__(self: M, other: object) -> bool:
         if not isinstance(other, Money):
             return NotImplemented
         if self.currency != other.currency:
-            raise TypeError(self._ERR_MSG_COMP)
+            raise CurrencyMismatch
         return self.amount <= other.amount
 
     def __gt__(self: M, other: object) -> bool:
         if not isinstance(other, Money):
             return NotImplemented
         if self.currency != other.currency:
-            raise TypeError(self._ERR_MSG_COMP)
+            raise CurrencyMismatch
         return self.amount > other.amount
 
     def __ge__(self: M, other: object) -> bool:
         if not isinstance(other, Money):
             return NotImplemented
         if self.currency != other.currency:
-            raise TypeError(self._ERR_MSG_COMP)
+            raise CurrencyMismatch
         return self.amount >= other.amount
 
     def __iter__(self):

@@ -4,7 +4,7 @@ from unittest.mock import patch
 import threading
 
 from simple_money_lib.currency import Currency
-from simple_money_lib.errors import CurrencyExistsError, CurrencyCodeInvalid
+from simple_money_lib.exceptions import CurrencyExistsError, CurrencyCodeInvalid
 
 # Reset the class for each test to clean state
 @pytest.fixture(autouse=True)

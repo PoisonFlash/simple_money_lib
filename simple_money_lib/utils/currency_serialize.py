@@ -2,7 +2,7 @@ import json
 import tempfile
 from pathlib import Path
 
-from simple_money_lib.errors import CurrencySerializationError
+from simple_money_lib.exceptions import CurrencySerializationError
 
 _DATA_DIR = Path(__file__).parent.parent / "data"
 _PREDEFINED_FILE = _DATA_DIR / "predefined_currencies.json"

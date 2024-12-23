@@ -83,10 +83,12 @@ class SimpleParserWithSubstitutions(BaseParser):
 
     def parse(self, money_string: str) -> tuple[decimal.Decimal, str | None]:
         if self.substitutions:
-            for old_value, new_value in self.substitutions.items():
+            # Sorted by length: longest first - to make sure that 'old1' is processed before 'old'
+            sorted_substitutions = sorted(self.substitutions.items(), key=lambda item: len(item[0]), reverse=True)
+            for old_value, new_value in sorted_substitutions:
                 # Add a trailing space if the new value ends with a digit
                 if new_value and new_value[-1].isdigit():
                     new_value = new_value + " "
-                money_string = money_string.replace(old_value, new_value)
+                money_string = re.sub(re.escape(old_value), new_value, money_string)
         # Delegate parsing to the parent class
         return super().parse(money_string)
