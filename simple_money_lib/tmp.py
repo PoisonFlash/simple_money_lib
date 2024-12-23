@@ -1,18 +1,11 @@
-from simple_money_lib import Currency
-from simple_money_lib.errors import CurrencyExistsError
+from simple_money_lib.money import Money
+from simple_money_lib.currencies.all import XXX, JPY
 
-btc = Currency.register(code="BTC", numeric=1000, sub_unit=8, name="Bitcoin")
-print(btc)
-try:
-    btc2 = Currency.register(code="BTC", numeric=10000, sub_unit=8, name="Bitcoin")
-except CurrencyExistsError:
-    pass
-else:
-    print("This works when strict mode is off (default)")
-print(btc2.numeric)
+# Default currency XXX with two decimal points
+print(Money(100))               # Output: 100.00 XXX
 
-Currency.strict_mode = True
-try:
-    btc3 = Currency.register(code="BTC", numeric=1000, sub_unit=8, name="Bitcoin")
-except CurrencyExistsError:
-    print("If strict mode is on, trying to register a currency again will raise an error")
+# Change default currency
+Money.default_currency.set("JPY")
+assert Money.default_currency.get() == JPY
+
+print(Money(100))               # Output: 100.00 XXX

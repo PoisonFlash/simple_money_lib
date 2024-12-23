@@ -1,10 +1,11 @@
 # simple_money_lib
 
-Thread-safe and parsing-friendly library for a powerful yet simple operations with moneys and currencies.
+Thread-safe and parsing-friendly Python library for a powerful yet simple operations with moneys and currencies.
 
 ## Overview
 
 `simple_money_lib` is a lightweight library designed for working with currencies and monetary values in Python. It is built with a focus on thread safety, flexibility, and ease of use, catering to both simple and advanced financial operations.
+The main focus is consistent and precise representation of monetary amounts in different currencies, and ease and intuitiveness of use.
 
 ### Key Features
 
@@ -33,32 +34,22 @@ Thread-safe and parsing-friendly library for a powerful yet simple operations wi
 - **Custom Currency Support**: Easily add and persist new currencies, such as cryptocurrencies or region-specific ones.
 - **Multithreaded Environments**: Designed to perform reliably in multithreaded applications.
 
+### Exclusions
+- **Currency conversion**: Not supported. Use a specialized library designed for your specific needs. The reason is that currency conversion requires additional parameters : date, time and the specific converter for accurate and replicable calculations. It would increase complexity and introduce a number of dependencies which might not be needed by many potential users, going against the concept of a **simple** and lightweight money library.
+- **Locale formatting**: Not directly supported. Use `babel` or a similar library. There is a helper method to convert Money objects to a suitable format. The reason is to control complexity and minimize dependencies.
+
+### Technical Details
+- `Money` objects contain a `Decimal` object with **fixed number of decimal points** and a `Currency` object.
+- Number of decimal points as per **ISO 4217** standard, or, for custom currencies, according to registration parameters. Create a custom currency if a different precision is needed (e.g., USD4).
+- `Currency` is determined by `code` parameter. All `Currency` objects with the same `code` are pointers to the same instance. 
+- Thread safety is accomplished with usage of thread locks and local thread variables.
 
 ## Installation
 
-Clone the repository and install using pip:
+There are no external dependencies. Just clone the repository and install using pip:
 
 ```bash
 pip install git+https://github.com/PoisonFlash/simple_money_lib.git
-```
-
-Then, run:
-```bash
-pip install -r requirements.txt
-```
-
-## Development Setup
-
-Make sure the core requirements are installed:
-
-```bash
-pip install -r requirements.txt
-```
-
-To install additional dependencies for data preparation and development:
-
-```bash
-pip install .[dev]
 ```
 
 ## Getting Started with `simple_money_lib`
@@ -184,6 +175,7 @@ print(money == money1)        # Output: True
 ### 4. Currency Collections
 
 Currencies are grouped into modules and collections for ease of import.
+
 ```python
 from simple_money_lib.currencies import all_iso_currencies, brics_currencies, major_currencies
 from simple_money_lib.currencies.all import XXX, EUR, USD
@@ -196,4 +188,94 @@ print(BRL in all_iso_currencies)  # True - note that BRL is imported from simple
 # If you want all 'standard' currencies, do the following:
 from simple_money_lib.currencies.all import *
 # This is primarily useful for readability of auto-generated modules.
-...
+```
+
+Custom collections can be created. Custom collections are NOT persistent.
+
+```python
+from simple_money_lib.currencies.currency_collections import CurrencyCollection
+from simple_money_lib.currencies.all import SEK, NOK, DKK, EUR, USD
+
+scandinavian_currencies = CurrencyCollection(
+    'SEK', NOK, DKK, EUR,               # It is ok to mix Currency objects and valid code strings
+    name='scandinavian',
+    description='Currencies in use in Scandinavia'
+)
+print(SEK in scandinavian_currencies)   # True
+print(USD in scandinavian_currencies)   # False
+```
+
+### 5.1. Customizing `Money` behaviour: rounding
+
+`Money` class is handling rounding / quantization internally. It uses rounding modes from `decimal` module. The default rounding mode is `decimal.ROUND_DOWN`.
+Manipulating `Money.rounding` parameter allows to customize rounding behaviour.
+
+```python
+import decimal
+from simple_money_lib.money import Money
+
+money = Money("20.26 USD")
+
+# All-thread rounding defaults
+print(f'Global: {Money.rounding.get_default()}')   # Output: Global: ROUND_DOWN
+# Rounding to 1 decimal digit
+print(round(money, 1))                             # Output: 20.20 USD
+Money.rounding.set_default(decimal.ROUND_HALF_UP)  # Change global default in a thread-safe manner
+print(round(money, 1))                             # Output: 20.30 USD
+
+# Local thread rounding
+# Global default, as no local mode is set yet
+print(f'Thread: {Money.rounding.get()}')           # Output: Thread: ROUND_HALF_UP
+print(round(money, 1))                             # Output: 20.30 USD
+
+# Global default will be used as no value is provided
+Money.rounding.set()
+# Local thread has now been set with global value:
+print(f'Thread: {Money.rounding.get()}')           # Output: Thread: ROUND_HALF_UP
+print(round(money, 1))                             # Output: 20.30 USD
+
+# Change global default
+Money.rounding.set_default(decimal.ROUND_DOWN)
+print(round(money, 1))                             # Output: 20.30 USD - Local thread is used, not global
+print(f'Global: {Money.rounding.get_default()}')   # Output: Global: ROUND_DOWN
+print(f'Thread: {Money.rounding.get()}')           # Output: Thread: ROUND_HALF_UP
+
+# Fire rounding in a separate thread to demonstrate difference
+def thread_function():
+    print(f'[Thread-2] Global: {Money.rounding.get_default()}')  # Output: Global: ROUND_DOWN
+    print(f'[Thread-2] Local: {Money.rounding.get()}')           # Output: Local: ROUND_DOWN as no local is set for this thread
+    print(round(money, 1))                                       # Output: 20.20 USD - global default used
+
+import threading
+thread = threading.Thread(target=thread_function)
+thread.start()
+thread.join()
+```
+
+### 5.2. Customizing `Money` behaviour: default currency
+
+Default currency allows to initialize `Money` with just an amount: `Money(100)`.
+By default, currency `XXX` will be used, as defined in **ISO 4217**. Note that number of decimal points for 'XXX' and other currencies without specified sub-units will be 2.
+Manipulating `Money.default_currency` parameter allows to customize rounding behaviour. The operations are thread-safe.
+
+Changing default currency can be especially useful when processing numeric data where currency is implied but not specified. As with the most of external data.
+Note that the default currency can only be set globally, not per thread. The reason is that setting a default currency is envisaged as a set-once initialization operation. E.g., to set up an accounting currency.
+For other scenarios, like processing separate data streams with different unspecified currencies, it is recommended to specify currency explicitly on instance creation, e.g. `Money(amount=data_point, currency=known_currency)`, or set up a custom parser. 
+
+```python
+from simple_money_lib.money import Money
+from simple_money_lib.currencies.all import XXX, JPY
+
+# Default currency XXX with two decimal points
+print(Money(100))                       # Output: 100.00 XXX
+assert Money.default_currency.get() is XXX
+
+# Change default currency
+Money.default_currency.set("JPY")       # Provide valid code string or Currency instance: imported JPY or "JPY"
+assert Money.default_currency.get() == JPY
+assert Money.default_currency.get() is JPY
+print(Money(100))                       # Output: 100 JPY - Note no decimal points for Japanese Yen
+```
+
+### 5.3. Customizing `Money` behaviour: parsers
+

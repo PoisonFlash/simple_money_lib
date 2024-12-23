@@ -328,8 +328,30 @@ class Money:
     def __iter__(self):
         """
         Unpack the Money object as a tuple: (amount, currency).
+        Example:
+            money = Money("100 USD")
+            amount, currency = money
+            print(amount)              # 100.00
+            print(*money)              # 100.00 USD
         """
         return iter((self.amount, self.currency))
+
+    def amount_and_currency_code(self):
+        """
+        Return the monetary value and the currency code as a tuple.
+
+        This method is useful for integrations with libraries or functions that
+        require the amount and currency code in a structured format, such as Babel's
+        `format_currency`.
+
+        Note:
+            Codes from custom currencies might not be directly recognizable by
+            external libraries or systems.
+
+        Returns:
+            tuple: A tuple containing the amount (Decimal) and the currency code (str).
+        """
+        return self.amount, self.currency.code
 
     def as_dict(self):
         """
@@ -340,6 +362,9 @@ class Money:
     def __getitem__(self, key):
         """
         Enable dictionary-style access for unpacking.
+        Example:
+            money = Money("100 USD")
+            print(money['currency'])    # USD
         """
         return self.as_dict()[key]
 
@@ -360,5 +385,6 @@ class Money:
     def __contains__(self, key):
         """
         Check if a key is a valid component of the Money object.
+        print 'amount' in Money(100, 'EUR')  # True
         """
         return key in self.keys()

@@ -630,6 +630,14 @@ def test_iter():
     result = list(money)
     assert result == [100, eur]
 
+def test_amount_and_currency_code():
+    money = Money(100, EUR)
+
+    amount, currency = money.amount_and_currency_code()
+    assert amount == 100
+    assert isinstance(currency, str)
+    assert currency == 'EUR'
+
 def test_as_dict():
     usd = Currency("USD")
     money = Money(100, usd)

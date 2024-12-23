@@ -40,7 +40,7 @@ class Currency:
             instance = super().__new__(cls)
             instance._code = code
             instance._numeric = metadata['numeric']
-            instance._sub_unit = metadata['sub_unit']
+            instance._sub_unit = metadata['sub_unit'] if metadata['sub_unit'] is not None else cls.default_sub_unit
             instance._name = metadata['name']
             cls._registry[code] = instance
             return instance
@@ -129,7 +129,7 @@ class Currency:
                 save_user_currencies(_user_defined_currencies)
             # Create a new currency instance using __new__
             instance = cls(code)
-            # ADDED: Assure that the newly registered currency is in the register
+            # Assure that the newly registered currency is in the register
             with cls._lock:
                 cls._registry[code] = instance
 
@@ -167,7 +167,7 @@ class Currency:
         return self.code
 
     def __repr__(self):
-        return f"Currency(code='{self.code}', name='{self.name}', numeric='{self.numeric}, sub_unit={self.sub_unit}')"
+        return f"Currency(code='{self.code}', name='{self.name}', numeric='{self.numeric}', sub_unit='{self.sub_unit}')"
 
     def __hash__(self) -> int:
         """
