@@ -802,7 +802,7 @@ class TestDefaultCurrencyStandalone:
             DefaultCurrency.set(code)
             assert DefaultCurrency.get().code == code
 
-        thread1 = threading.Thread(target=set_currency_in_thread, args=("RUR",))
+        thread1 = threading.Thread(target=set_currency_in_thread, args=("RUB",))
         thread2 = threading.Thread(target=set_currency_in_thread, args=("KES",))
 
         thread1.start()
@@ -812,7 +812,7 @@ class TestDefaultCurrencyStandalone:
 
         # After threads, check the last set currency
         final_currency = DefaultCurrency.get()
-        assert final_currency.code in ("RUR", "KES")  # Either thread's update is valid
+        assert final_currency.code in ("RUB", "KES")  # Either thread's update is valid
 
     def test_reset_default_currency(self):
         """Verify resetting to 'XXX' works."""
