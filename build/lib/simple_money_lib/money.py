@@ -7,6 +7,7 @@ import decimal
 M = TypeVar("M", bound="Money")
 
 from simple_money_lib.currency import Currency
+from simple_money_lib.exceptions import CurrencyMismatch, MoneyDivisionIllegal, MoneyInvalidOperation
 from simple_money_lib.parsers import ParserManager as _ParserManager
 from simple_money_lib.utils.rounding import RoundingManager as _RoundingManager
 from simple_money_lib.utils.default_currency import DefaultCurrency as _DefaultCurrency
@@ -15,13 +16,6 @@ from simple_money_lib.utils.default_currency import DefaultCurrency as _DefaultC
 _NUMERIC_TYPES = (int, float, Decimal)  # Permitted numeric types for operations
 
 class Money:
-
-    # Class constants
-    _ERR_MSG_ADD_SUB = "Cannot add or subtract Money objects with different currencies"
-    _ERR_MSG_MULT = "Unsupported operand type(s) for {op}: 'Money' and '{type}'"
-    _ERR_MSG_DIV = "Cannot divide by a Money instance."
-    _ERR_MSG_EXPN = "Exponentiation is not supported for Money objects."
-    _ERR_MSG_COMP = "Cannot compare Money objects with different currencies."
 
     # Class variables for additional functionality
     rounding = _RoundingManager()
@@ -168,8 +162,7 @@ class Money:
         # Currencies must be same
         if self.currency is other.currency:
             return self.__class__(amount=self.amount + other.amount, currency=self.currency)
-        # return NotImplemented
-        raise TypeError(self._ERR_MSG_ADD_SUB)
+        raise CurrencyMismatch
 
     def __radd__(self: M, other: object) -> M:
         """Enable right-hand addition with Money objects"""
@@ -183,7 +176,7 @@ class Money:
             return NotImplemented
         if self.currency is other.currency:
             return self.__class__(amount=self.amount - other.amount, currency=self.currency)
-        raise TypeError(self._ERR_MSG_ADD_SUB)
+        raise CurrencyMismatch
 
     def __rsub__(self: M, other: object) -> M:
         """Enable negation through subtraction from zero: 0 - Money => -Money"""
@@ -198,8 +191,7 @@ class Money:
                 amount=self._quantize_amount(self.amount * Decimal(other)),
                 currency=self.currency,
             )
-        # return NotImplemented
-        raise TypeError(self._ERR_MSG_MULT.format(op="*", type=type(other).__name__))
+        raise MoneyInvalidOperation(operation="*", type_other=type(other).__name__)
 
     def __rmul__(self: M, other: object) -> M:
         return self.__mul__(other)
@@ -212,7 +204,7 @@ class Money:
                 amount=self._quantize_amount(self.amount / Decimal(other)),
                 currency=self.currency,
             )
-        raise TypeError(self._ERR_MSG_MULT.format(op="/", type=type(other).__name__))
+        raise MoneyInvalidOperation(operation="/", type_other=type(other).__name__)
 
     def divide_with_adjustment(self: M, other: object) -> tuple[M, M]:
         """
@@ -233,10 +225,10 @@ class Money:
             )
             div_adj = self - div_result * other
             return div_result, div_adj
-        raise TypeError(self._ERR_MSG_MULT.format(op="/", type=type(other).__name__))
+        raise MoneyInvalidOperation(operation="/", type_other=type(other).__name__)
 
     def __rtruediv__(self: M, other: object) -> M:
-        raise TypeError(self._ERR_MSG_DIV)
+        raise MoneyDivisionIllegal
 
     def __floordiv__(self: M, other: object) -> M:
         if isinstance(other, _NUMERIC_TYPES):
@@ -248,10 +240,10 @@ class Money:
 
             # Return a new Money object
             return self.__class__(amount=self._quantize_amount(result_amount), currency=self.currency)
-        raise TypeError(self._ERR_MSG_MULT.format(op="//", type=type(other).__name__))
+        raise MoneyInvalidOperation(operation="//", type_other=type(other).__name__)
 
     def __rfloordiv__(self: M, other: object) -> M:
-        raise TypeError(self._ERR_MSG_DIV)
+        raise MoneyDivisionIllegal
 
     def __mod__(self: M, other: object) -> M:
         if isinstance(other, _NUMERIC_TYPES):
@@ -265,10 +257,10 @@ class Money:
             quantized_remainder = self._quantize_amount(remainder)
 
             return self.__class__(amount=quantized_remainder, currency=self.currency)
-        raise TypeError(self._ERR_MSG_MULT.format(op="%", type=type(other).__name__))
+        raise MoneyInvalidOperation(operation="%", type_other=type(other).__name__)
 
     def __rmod__(self: M, other: object) -> M:
-        raise TypeError(self._ERR_MSG_DIV)
+        raise MoneyDivisionIllegal
 
     def __pow__(self: M, exponent: object) -> M:
         return NotImplemented
@@ -301,35 +293,57 @@ class Money:
         if not isinstance(other, Money):
             return NotImplemented
         if self.currency != other.currency:
-            raise TypeError(self._ERR_MSG_COMP)
+            raise CurrencyMismatch
         return self.amount < other.amount
 
     def __le__(self: M, other: object) -> bool:
         if not isinstance(other, Money):
             return NotImplemented
         if self.currency != other.currency:
-            raise TypeError(self._ERR_MSG_COMP)
+            raise CurrencyMismatch
         return self.amount <= other.amount
 
     def __gt__(self: M, other: object) -> bool:
         if not isinstance(other, Money):
             return NotImplemented
         if self.currency != other.currency:
-            raise TypeError(self._ERR_MSG_COMP)
+            raise CurrencyMismatch
         return self.amount > other.amount
 
     def __ge__(self: M, other: object) -> bool:
         if not isinstance(other, Money):
             return NotImplemented
         if self.currency != other.currency:
-            raise TypeError(self._ERR_MSG_COMP)
+            raise CurrencyMismatch
         return self.amount >= other.amount
 
     def __iter__(self):
         """
         Unpack the Money object as a tuple: (amount, currency).
+        Example:
+            money = Money("100 USD")
+            amount, currency = money
+            print(amount)              # 100.00
+            print(*money)              # 100.00 USD
         """
         return iter((self.amount, self.currency))
+
+    def amount_and_currency_code(self):
+        """
+        Return the monetary value and the currency code as a tuple.
+
+        This method is useful for integrations with libraries or functions that
+        require the amount and currency code in a structured format, such as Babel's
+        `format_currency`.
+
+        Note:
+            Codes from custom currencies might not be directly recognizable by
+            external libraries or systems.
+
+        Returns:
+            tuple: A tuple containing the amount (Decimal) and the currency code (str).
+        """
+        return self.amount, self.currency.code
 
     def as_dict(self):
         """
@@ -340,6 +354,9 @@ class Money:
     def __getitem__(self, key):
         """
         Enable dictionary-style access for unpacking.
+        Example:
+            money = Money("100 USD")
+            print(money['currency'])    # USD
         """
         return self.as_dict()[key]
 
@@ -360,7 +377,6 @@ class Money:
     def __contains__(self, key):
         """
         Check if a key is a valid component of the Money object.
+        print 'amount' in Money(100, 'EUR')  # True
         """
         return key in self.keys()
-
-
