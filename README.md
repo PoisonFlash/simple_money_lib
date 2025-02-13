@@ -1,6 +1,8 @@
 # simple_money_lib
 
-Thread-safe and parsing-friendly Python library for a powerful yet simple operations with moneys and currencies.
+#### Video Demo: https://youtu.be/i696vnQUCPE
+
+#### Description: Thread-safe and parsing-friendly Python library for a powerful yet simple operations with moneys and currencies.
 
 ## Overview
 
@@ -68,7 +70,7 @@ pip install git+https://github.com/PoisonFlash/simple_money_lib.git
 Define or retrieve a currency using its ISO code:
 
 ```python
-from simple_money_lib.currency import Currency
+from simple_money_lib import Currency
 from simple_money_lib.exceptions import CurrencyExistsError
 
 # Import a predefined currency
@@ -211,7 +213,7 @@ from simple_money_lib.currencies.all import XXX, EUR, USD
 from simple_money_lib.currencies.brics import BRL
 print(XXX in all_iso_currencies)  # True
 print(USD in major_currencies)    # True - note that USD is imported from simple_money_lib.currencies.all
-print(EUR in brics_currencies)    # True
+print(EUR in brics_currencies)    # False
 print(BRL in all_iso_currencies)  # True - note that BRL is imported from simple_money_lib.currencies.brics
 
 # If you want all 'standard' currencies, do the following:
@@ -221,7 +223,7 @@ from simple_money_lib.currencies.all import *
 from simple_money_lib.currencies.major import *
 ```
 
-Custom collections can be created. Custom collections are NOT persistent.
+Custom collections can be created. Custom collections are NOT (yet) persistent.
 
 ```python
 from simple_money_lib.currencies.currency_collections import CurrencyCollection
